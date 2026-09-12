@@ -9,8 +9,15 @@ chizmani nom, tavsif va lokatsiya bilan qurilma xotirasida **doimiy** saqlaydi.
   devor-devor kiritiladi, burchaklar soni cheklanmagan (L-shakl, U-shakl shablonlari bor).
 - **Chizma:** devor uzunliklari, umumiy o‘lcham strelkasi, `S ≈ … m²` yozuvi, ixtiyoriy burchak
   gradusi; avtomatik yopilgan devor uzuq chiziq bilan ko‘rsatiladi; devorlar kesishsa ogohlantiradi.
+  Yozuvlar hech qachon ustma-ust tushmaydi: strelka umumiy o‘lchamni bir marta ko‘rsatadi,
+  yuza yozuvi devor yozuvidan keyin turadi, joy tor bo‘lsa shrift avtomatik kichrayadi.
 - **Xotira:** `shared_preferences` (JSON + zaxira nusxa). Chizmani **o‘chirish imkoni yo‘q** —
   faqat tahrirlash.
+- **Material hisobi:** xona balandligi → devorlar yuzasi, hajm, pol+devor yuzasi; zaxira
+  foizi (0/5/10/15%) va “1 quti = N m²” bo‘yicha kerakli quti soni.
+- **Ulashish va zaxira:** chizmani PNG rasm qilib yuborish; barcha chizmalarni bitta JSON
+  faylga saqlash va undan tiklash (tiklash faqat qo‘shadi, hech narsa o‘chirmaydi);
+  chizmadan nusxa olish.
 - **Lokatsiya:** internet yoqiq bo‘lsa GPS ruxsati so‘raladi; Google Maps havolasi yoki
   koordinatani qo‘lda kiritish; manzil nomi (teskari geokodlash); xaritada ochish.
 - **Dizayn:** namunadagi qorong‘i mavzu (`#151515` fon, `#085041` shakl, `#56BE9B` chegara).

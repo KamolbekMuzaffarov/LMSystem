@@ -72,6 +72,43 @@ class SketchStore extends ChangeNotifier {
     return _persist();
   }
 
+  /// Zaxira nusxadan chizmalarni qo'shish.
+  ///
+  /// Mavjud chizma faqat kelgan nusxa yangiroq bo'lsa yangilanadi; hech narsa
+  /// o'chirilmaydi.
+  Future<({int added, int updated, int skipped})> importAll(
+    List<RoomSketch> incoming,
+  ) async {
+    var added = 0;
+    var updated = 0;
+    var skipped = 0;
+
+    for (final sketch in incoming) {
+      if (sketch.id.isEmpty) {
+        skipped++;
+        continue;
+      }
+      final index = _sketches.indexWhere((item) => item.id == sketch.id);
+      if (index == -1) {
+        _sketches.add(sketch);
+        added++;
+      } else if (sketch.updatedAt.isAfter(_sketches[index].updatedAt)) {
+        _sketches[index] = sketch;
+        updated++;
+      } else {
+        skipped++;
+      }
+    }
+
+    if (added == 0 && updated == 0) {
+      return (added: 0, updated: 0, skipped: skipped);
+    }
+    _sort();
+    notifyListeners();
+    await _persist();
+    return (added: added, updated: updated, skipped: skipped);
+  }
+
   void _sort() {
     _sketches.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   }

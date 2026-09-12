@@ -45,6 +45,18 @@ class _AboutBody extends StatelessWidget {
       'Yuza Gauss (shoelace) formulasi bilan hisoblanadi — shakl qanchalik '
           'murakkab bo‘lsa ham natija to‘g‘ri chiqadi.',
     ),
+    (
+      Icons.calculate_outlined,
+      'Material hisobi',
+      'Balandlikni kiritsangiz devorlar yuzasi va hajmi chiqadi. Zaxira '
+          'foizini tanlab, kerakli quti yoki rulon sonini ko‘rasiz.',
+    ),
+    (
+      Icons.ios_share,
+      'Ulashish va zaxira',
+      'Chizmani rasm qilib yuborish, barcha chizmalarni bitta faylga saqlash '
+          'va keyin shu fayldan tiklash mumkin.',
+    ),
   ];
 
   @override

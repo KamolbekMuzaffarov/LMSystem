@@ -112,7 +112,25 @@ class RoomGeometry {
     return sum / 2;
   }
 
+  /// Eng kichik yopilish farqi (metr). Undan kichik farq nolga tenglashtiriladi.
   static const double closureEpsilon = 0.005;
+
+  /// Xona yopilgan hisoblanadigan farq.
+  ///
+  /// Burchak gradusda butun son bilan kiritilganda (masalan 143° o'rniga
+  /// 143.13°) oxirgi nuqta bir necha santimetr chetga tushadi. Shu sababli
+  /// tolerantlik eng qisqa devorga nisbatan olinadi: 5 mm yoki devorning
+  /// 1% i — qaysi biri kattaroq bo'lsa.
+  static double closureToleranceFor(List<Wall> walls) {
+    var shortest = double.infinity;
+    for (final wall in walls) {
+      if (wall.length.isFinite && wall.length > 0 && wall.length < shortest) {
+        shortest = wall.length;
+      }
+    }
+    if (!shortest.isFinite) return closureEpsilon;
+    return math.max(closureEpsilon, shortest * 0.01);
+  }
 
   static const RoomGeometry empty = RoomGeometry(
     vertices: <Offset>[],
@@ -149,7 +167,7 @@ class RoomGeometry {
     }
 
     final gap = (points.last - points.first).distance;
-    final closed = gap <= closureEpsilon;
+    final closed = gap <= closureToleranceFor(walls);
     final ring = closed ? points.sublist(0, points.length - 1) : points;
 
     if (ring.length < 2) return empty;

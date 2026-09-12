@@ -3,9 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/formatters.dart';
+import '../core/ids.dart';
 import '../data/sketch_store.dart';
 import '../models/room_sketch.dart';
+import '../services/backup_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/material_card.dart';
 import '../widgets/sketch_view.dart';
 import '../widgets/ui_bits.dart';
 import 'editor_screen.dart';
@@ -19,8 +22,44 @@ class DetailScreen extends StatefulWidget {
   State<DetailScreen> createState() => _DetailScreenState();
 }
 
+enum _DetailAction { share, duplicate }
+
 class _DetailScreenState extends State<DetailScreen> {
   bool _showAngles = false;
+  bool _busy = false;
+
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _shareImage(RoomSketch sketch) async {
+    setState(() => _busy = true);
+    final error = await BackupService.shareSketchImage(sketch);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (error != null) _snack(error);
+  }
+
+  Future<void> _duplicate(RoomSketch sketch) async {
+    final store = SketchScope.read(context);
+    final copy = sketch.duplicate(
+      id: Ids.generate(),
+      name: '${sketch.displayName} (nusxa)',
+    );
+    final ok = await store.add(copy);
+    if (!mounted) return;
+    _snack(ok ? 'Nusxa saqlandi' : "Nusxani saqlab bo'lmadi");
+    if (ok) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => DetailScreen(sketchId: copy.id),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +100,47 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
             icon: const Icon(Icons.edit_outlined),
+          ),
+          PopupMenuButton<_DetailAction>(
+            tooltip: 'Boshqa amallar',
+            color: AppColors.surfaceHigh,
+            position: PopupMenuPosition.under,
+            enabled: !_busy,
+            icon: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.more_vert),
+            onSelected: (action) => switch (action) {
+              _DetailAction.share => _shareImage(sketch),
+              _DetailAction.duplicate => _duplicate(sketch),
+            },
+            itemBuilder: (context) => const <PopupMenuEntry<_DetailAction>>[
+              PopupMenuItem<_DetailAction>(
+                value: _DetailAction.share,
+                child: Row(
+                  children: <Widget>[
+                    Icon(Icons.ios_share, size: 17,
+                        color: AppColors.shapeStroke),
+                    SizedBox(width: 10),
+                    Text('Rasm qilib ulashish'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<_DetailAction>(
+                value: _DetailAction.duplicate,
+                child: Row(
+                  children: <Widget>[
+                    Icon(Icons.copy_all_outlined, size: 17,
+                        color: AppColors.shapeStroke),
+                    SizedBox(width: 10),
+                    Text('Nusxa olish'),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 4),
         ],
@@ -113,6 +193,8 @@ class _DetailScreenState extends State<DetailScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          MaterialCard(estimate: sketch.estimate),
           if (sketch.description.trim().isNotEmpty) ...<Widget>[
             const SizedBox(height: 12),
             SectionCard(

@@ -196,6 +196,62 @@ void main() {
     });
   });
 
+  group('Yopilish tolerantligi', () {
+    test('butun gradus bilan kiritilgan uchburchak yopiladi', () {
+      // 3-4-5 uchburchak: aniq burilish 143.13°, foydalanuvchi 143° kiritadi.
+      const walls = <Wall>[
+        Wall(length: 3, turn: 90),
+        Wall(length: 4, turn: 143),
+        Wall(length: 5, turn: 127),
+      ];
+      final geometry = RoomGeometry.fromWalls(walls);
+      expect(geometry.vertices.length, 3, reason: 'soxta devor qo\u2018shilmasin');
+      expect(geometry.isClosed, isTrue);
+      expect(geometry.impliedEdge, isNull);
+      expect(geometry.area, closeTo(6, 0.02));
+      final angles = List<double>.generate(3, geometry.interiorAngleAt);
+      expect(angles.reduce((a, b) => a + b), closeTo(180, 0.5));
+    });
+
+    test('teng tomonli uchburchak 119.9° bilan ham yopiladi', () {
+      const walls = <Wall>[
+        Wall(length: 10, turn: 119.9),
+        Wall(length: 10, turn: 119.9),
+        Wall(length: 10, turn: 120.2),
+      ];
+      final geometry = RoomGeometry.fromWalls(walls);
+      expect(geometry.vertices.length, 3);
+      expect(geometry.isClosed, isTrue);
+      expect(geometry.area, closeTo(43.30, 0.1));
+    });
+
+    test('tolerantlik eng qisqa devorga nisbatan olinadi', () {
+      expect(
+        RoomGeometry.closureToleranceFor(const <Wall>[Wall(length: 10)]),
+        closeTo(0.1, 1e-9),
+      );
+      expect(
+        RoomGeometry.closureToleranceFor(const <Wall>[Wall(length: 0.2)]),
+        closeTo(0.005, 1e-9),
+      );
+      expect(
+        RoomGeometry.closureToleranceFor(const <Wall>[]),
+        RoomGeometry.closureEpsilon,
+      );
+    });
+
+    test('haqiqiy ochiq shakl hamon yopilmagan deb qoladi', () {
+      const walls = <Wall>[
+        Wall(length: 5, turn: 90),
+        Wall(length: 4, turn: 90),
+        Wall(length: 5, turn: 90),
+      ];
+      final geometry = RoomGeometry.fromWalls(walls);
+      expect(geometry.isClosed, isFalse);
+      expect(geometry.impliedEdge!.length, closeTo(4, 0.0001));
+    });
+  });
+
   group('Tashqi normal', () {
     test('yozuvlar shakldan tashqarida joylashadi', () {
       final built = ShapePresets.rectangle(length: 6, width: 4);

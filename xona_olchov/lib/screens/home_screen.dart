@@ -9,9 +9,13 @@ import '../theme/app_theme.dart';
 import '../widgets/sketch_painter.dart';
 import '../widgets/sketch_view.dart';
 import '../widgets/ui_bits.dart';
+import '../services/backup_service.dart';
 import 'about_sheet.dart';
+import 'backup_sheet.dart';
 import 'detail_screen.dart';
 import 'editor_screen.dart';
+
+enum MenuAction { backup, restore, about }
 
 enum SortMode {
   recent('Avval yangilari'),
@@ -69,6 +73,32 @@ class _HomeScreenState extends State<HomeScreen> {
     return filtered;
   }
 
+  Future<void> _onMenu(MenuAction action) async {
+    switch (action) {
+      case MenuAction.about:
+        await AboutSheet.show(context);
+      case MenuAction.restore:
+        await BackupSheet.showRestore(context);
+      case MenuAction.backup:
+        final store = SketchScope.read(context);
+        if (store.count == 0) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(content: Text('Hali saqlanadigan chizma yo‘q')),
+            );
+          return;
+        }
+        final error = await BackupService.shareBackup(store.sketches);
+        if (error != null && mounted) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(error)));
+        }
+    }
+  }
+
   Future<void> _openEditor([RoomSketch? sketch]) async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -102,13 +132,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
             ],
           ),
-          IconButton(
-            tooltip: "Ilova haqida",
-            onPressed: () => AboutSheet.show(context),
-            icon: const Icon(
-              Icons.info_outline,
-              color: AppColors.textSecondary,
-            ),
+          PopupMenuButton<MenuAction>(
+            tooltip: 'Menyu',
+            color: AppColors.surfaceHigh,
+            position: PopupMenuPosition.under,
+            icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+            onSelected: _onMenu,
+            itemBuilder: (context) => const <PopupMenuEntry<MenuAction>>[
+              PopupMenuItem<MenuAction>(
+                value: MenuAction.backup,
+                child: Row(
+                  children: <Widget>[
+                    Icon(Icons.save_alt, size: 17,
+                        color: AppColors.shapeStroke),
+                    SizedBox(width: 10),
+                    Text('Zaxira nusxa saqlash'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<MenuAction>(
+                value: MenuAction.restore,
+                child: Row(
+                  children: <Widget>[
+                    Icon(Icons.restore, size: 17, color: AppColors.shapeStroke),
+                    SizedBox(width: 10),
+                    Text('Zaxiradan tiklash'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<MenuAction>(
+                value: MenuAction.about,
+                child: Row(
+                  children: <Widget>[
+                    Icon(Icons.info_outline, size: 17,
+                        color: AppColors.shapeStroke),
+                    SizedBox(width: 10),
+                    Text('Ilova haqida'),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 4),
         ],

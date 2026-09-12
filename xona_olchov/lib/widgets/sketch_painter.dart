@@ -25,7 +25,10 @@ class _EdgeLabel {
   /// Tashqariga qaragan birlik vektor.
   final Offset normal;
 
-  Rect rectFor(Offset pixelAnchor, double gap) {
+  /// Devordan qanchalik uzoqda turishi — kesishuv bo'lsa kattalashtiriladi.
+  double gap = SketchPainter.labelGap;
+
+  Rect rectFor(Offset pixelAnchor) {
     final size = painter.size;
     final center = pixelAnchor +
         Offset(
@@ -68,18 +71,37 @@ class SketchPainter extends CustomPainter {
 
   bool get _isFull => detail == SketchDetail.full;
 
-  static const double _labelGap = 7;
-  static const double _spanGap = 16;
+  /// Devor yozuvi bilan devor orasidagi masofa.
+  static const double labelGap = 7;
+
+  /// Kesishuvni hal qilishda yozuvni ko'pi bilan shuncha suramiz.
+  static const double _maxLabelGap = 64;
+
+  /// Umumiy o'lcham strelkasi bilan chizma orasidagi masofa.
+  static const double _spanGap = 12;
+
+  /// Yuza yozuvi bilan chizma orasidagi masofa.
+  static const double _areaGap = 12;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (geometry.isEmpty || size.isEmpty) return;
 
-    final labels = _isFull ? _buildEdgeLabels() : const <_EdgeLabel>[];
-    final spanPainter = _isFull && showSpan ? _buildSpanLabel() : null;
-    final areaPainter = _isFull && showArea ? _buildAreaLabel() : null;
-
-    final layout = _fit(size, labels, spanPainter, areaPainter);
+    // Maydon juda tor bo'lsa yozuvlarni kichraytirib qayta joylashtiramiz.
+    var factor = 1.0;
+    var labels = const <_EdgeLabel>[];
+    TextPainter? spanPainter;
+    TextPainter? areaPainter;
+    _Layout? layout;
+    for (var attempt = 0; attempt < 4; attempt++) {
+      labels = _isFull ? _buildEdgeLabels(factor) : const <_EdgeLabel>[];
+      spanPainter = _isFull && showSpan ? _buildSpanLabel(factor) : null;
+      areaPainter = _isFull && showArea ? _buildAreaLabel(factor) : null;
+      layout = _fit(size, labels, spanPainter, areaPainter);
+      if (layout == null) return;
+      if (layout.fits) break;
+      factor *= 0.8;
+    }
     if (layout == null) return;
 
     _paintShape(canvas, layout);
@@ -103,70 +125,133 @@ class SketchPainter extends CustomPainter {
     final width = math.max(bounds.width, 0.001);
     final height = math.max(bounds.height, 0.001);
 
-    final topExtra = spanPainter == null
-        ? 0.0
-        : spanPainter.height + _spanGap + 10;
-    final bottomExtra = areaPainter == null ? 0.0 : areaPainter.height + 14;
+    // Strelka va yuza yozuvi uchun ajratilgan doimiy (piksel) bo'shliqlar.
+    final spanBand =
+        spanPainter == null ? 0.0 : spanPainter.height + _spanGap + 4;
+    final areaBand = areaPainter == null ? 0.0 : areaPainter.height + _areaGap;
     const edgePad = 6.0;
 
-    var available = Size(
-      math.max(size.width - edgePad * 2, 1),
-      math.max(size.height - edgePad * 2 - topExtra - bottomExtra, 1),
+    final availableWidth = math.max(size.width - edgePad * 2, 1.0);
+    final availableHeight = math.max(
+      size.height - edgePad * 2 - spanBand - areaBand,
+      1.0,
     );
 
-    var scale = math.min(available.width / width, available.height / height);
+    var scale = math.min(availableWidth / width, availableHeight / height);
     if (!scale.isFinite || scale <= 0) return null;
 
-    // Yozuvlar piksel o'lchamda bo'lgani uchun masshtabni bir necha marta
-    // aniqlashtiramiz — hech bir yozuv chetdan chiqib ketmasin.
-    var origin = Offset.zero;
-    for (var pass = 0; pass < 4; pass++) {
-      origin = Offset(
-        edgePad + (available.width - width * scale) / 2 - bounds.left * scale,
-        edgePad +
-            topExtra +
-            (available.height - height * scale) / 2 -
-            bounds.top * scale,
-      );
-      final layout = _Layout(scale: scale, origin: origin);
+    // Bir piksel zaxira — chetga tegib turgan yozuv qolmasin.
+    final targetWidth = math.max(size.width - 1, 1.0);
+    final targetHeight = math.max(size.height - 1, 1.0);
 
-      var used = Rect.fromLTWH(
-        origin.dx + bounds.left * scale,
-        origin.dy + bounds.top * scale,
-        width * scale,
-        height * scale,
+    Rect measure(double value) {
+      final probe = _Layout(
+        scale: value,
+        origin: Offset(-bounds.left * value, -bounds.top * value),
       );
-      for (final label in labels) {
-        used = used.expandToInclude(
-          label.rectFor(layout.toPixel(label.anchor), _labelGap),
-        );
-      }
-      if (spanPainter != null) {
-        used = used.expandToInclude(
-          Rect.fromLTWH(
-            used.left,
-            used.top - (spanPainter.height + _spanGap),
-            math.max(used.width, spanPainter.width),
-            spanPainter.height + _spanGap,
-          ),
-        );
-      }
-
-      final overflowX = used.width > size.width ? size.width / used.width : 1.0;
-      final overflowY = used.height > size.height - bottomExtra
-          ? (size.height - bottomExtra) / used.height
-          : 1.0;
-      final correction = math.min(overflowX, overflowY);
-      if (correction > 0.995) {
-        // Markazga tekislaymiz.
-        final dx = (size.width - used.width) / 2 - (used.left - origin.dx);
-        final dy = (size.height - bottomExtra - used.height) / 2 -
-            (used.top - origin.dy);
-        return _Layout(scale: scale, origin: Offset(dx, dy));
-      }
-      scale *= correction.clamp(0.2, 1.0);
+      return _resolveLabels(
+        probe,
+        labels,
+        Rect.fromLTWH(0, 0, width * value, height * value),
+      );
     }
-    return _Layout(scale: scale, origin: origin);
+
+    double fitOf(Rect measured) {
+      final totalWidth = math.max(
+        measured.width,
+        math.max(spanPainter?.width ?? 0, areaPainter?.width ?? 0),
+      );
+      final totalHeight = measured.height + spanBand + areaBand;
+      final fitX =
+          totalWidth <= targetWidth ? 1.0 : targetWidth / totalWidth;
+      final fitY =
+          totalHeight <= targetHeight ? 1.0 : targetHeight / totalHeight;
+      return math.min(fitX, fitY);
+    }
+
+    // Yozuvlar piksel o'lchamda, shakl esa masshtabga bog'liq. Shu sababli
+    // kerakli masshtabni to'g'ridan-to'g'ri yechamiz: joy = shakl×masshtab +
+    // yozuvlar (o'zgarmas qism).
+    for (var pass = 0; pass < 6; pass++) {
+      final measured = measure(scale);
+      if (fitOf(measured) >= 1.0) break;
+      final constantWidth = measured.width - width * scale;
+      final constantHeight =
+          measured.height - height * scale + spanBand + areaBand;
+      final byWidth = (targetWidth - constantWidth) / width;
+      final byHeight = (targetHeight - constantHeight) / height;
+      final solved = math.min(byWidth, byHeight);
+      if (!solved.isFinite) break;
+      final next = solved.clamp(scale * 0.2, scale);
+      if (next <= 0 || (scale - next).abs() < 0.001) break;
+      scale = next;
+    }
+
+    // Yakuniy o'lchash: yozuv masofalari ham shu masshtabga mos bo'lishi kerak.
+    final content = measure(scale);
+    final fits = fitOf(content) >= 1.0;
+
+    // Butun kompozitsiyani markazga tekislaymiz: strelka + shakl + yozuvlar + yuza.
+    final total = Rect.fromLTRB(
+      content.left,
+      content.top - spanBand,
+      content.right,
+      content.bottom + areaBand,
+    );
+    final shift = Offset(
+      (size.width - total.width) / 2 - total.left,
+      (size.height - total.height) / 2 - total.top,
+    );
+
+    return _Layout(
+      scale: scale,
+      origin: Offset(
+        -bounds.left * scale + shift.dx,
+        -bounds.top * scale + shift.dy,
+      ),
+      contentTop: content.top + shift.dy,
+      contentBottom: content.bottom + shift.dy,
+      fits: fits,
+    );
+  }
+
+  /// Devor yozuvlarini joylashtiradi: ustma-ust tushganlarini tashqariga suradi.
+  ///
+  /// Botiq (ichkariga kirgan) burchaklarda qo'shni devorlarning yozuvlari bir
+  /// nuqtaga yaqin tushadi — shuning uchun ularni bir-biridan ajratamiz.
+  Rect _resolveLabels(
+    _Layout layout,
+    List<_EdgeLabel> labels,
+    Rect shapeRect,
+  ) {
+    for (final label in labels) {
+      label.gap = labelGap;
+    }
+
+    for (var pass = 0; pass < 5; pass++) {
+      var moved = false;
+      for (var i = 1; i < labels.length; i++) {
+        for (var j = 0; j < i; j++) {
+          final a = labels[i].rectFor(layout.toPixel(labels[i].anchor));
+          final b = labels[j].rectFor(layout.toPixel(labels[j].anchor));
+          if (!a.overlaps(b)) continue;
+          final overlapX = math.min(a.right, b.right) - math.max(a.left, b.left);
+          final overlapY = math.min(a.bottom, b.bottom) - math.max(a.top, b.top);
+          final push = math.min(overlapX, overlapY) + 3;
+          final next = math.min(labels[i].gap + push, _maxLabelGap);
+          if (next <= labels[i].gap) continue;
+          labels[i].gap = next;
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+
+    var used = shapeRect;
+    for (final label in labels) {
+      used = used.expandToInclude(label.rectFor(layout.toPixel(label.anchor)));
+    }
+    return used;
   }
 
   // --- Chizish -------------------------------------------------------------
@@ -231,7 +316,7 @@ class SketchPainter extends CustomPainter {
     List<_EdgeLabel> labels,
   ) {
     for (final label in labels) {
-      final rect = label.rectFor(layout.toPixel(label.anchor), _labelGap);
+      final rect = label.rectFor(layout.toPixel(label.anchor));
       label.painter.paint(canvas, rect.topLeft);
     }
   }
@@ -241,8 +326,9 @@ class SketchPainter extends CustomPainter {
     final topLeft = layout.toPixel(Offset(bounds.left, bounds.top));
     final left = topLeft.dx;
     final right = layout.toPixel(Offset(bounds.right, bounds.top)).dx;
-    final shapeTop = topLeft.dy;
-    final y = shapeTop - _spanGap;
+
+    // Strelka shakldan ham, devor yozuvlaridan ham yuqorida turadi.
+    final y = math.min(topLeft.dy, layout.contentTop) - _spanGap;
 
     final linePaint = Paint()
       ..color = mutedColor
@@ -253,16 +339,13 @@ class SketchPainter extends CustomPainter {
     _drawArrowHead(canvas, Offset(left, y), -1, linePaint);
     _drawArrowHead(canvas, Offset(right, y), 1, linePaint);
 
-    // Nozik yordamchi chiziqlar.
-    final guidePaint = Paint()
-      ..color = mutedColor.withValues(alpha: 0.35)
+    // Uchlaridagi qisqa belgilar (chizma uslubida).
+    final tickPaint = Paint()
+      ..color = mutedColor.withValues(alpha: 0.55)
       ..strokeWidth = 1;
-    canvas.drawLine(Offset(left, y + 3), Offset(left, shapeTop - 2), guidePaint);
-    canvas.drawLine(
-      Offset(right, y + 3),
-      Offset(right, shapeTop - 2),
-      guidePaint,
-    );
+    for (final x in <double>[left, right]) {
+      canvas.drawLine(Offset(x, y - 4), Offset(x, y + 4), tickPaint);
+    }
 
     painter.paint(
       canvas,
@@ -287,9 +370,12 @@ class SketchPainter extends CustomPainter {
       final current = vertices[i];
       final toPrev = _normalize(prev - current);
       final toNext = _normalize(next - current);
-      final inward = _normalize(toPrev + toNext);
+      var inward = _normalize(toPrev + toNext);
+      // Botiq (reflex) burchakda yo'nalishlar yig'indisi xonadan tashqariga
+      // qaraydi — yozuvni teskari tomonga suramiz.
+      if (angle > 180) inward = -inward;
       final base = layout.toPixel(current);
-      final center = base + inward * 18;
+      final center = base + inward * (angle > 180 ? 22 : 18);
       painter.paint(
         canvas,
         center - Offset(painter.width / 2, painter.height / 2),
@@ -304,22 +390,28 @@ class SketchPainter extends CustomPainter {
     TextPainter painter,
   ) {
     final bounds = geometry.bounds;
-    final bottom = layout.toPixel(Offset(bounds.left, bounds.bottom)).dy;
-    final y = math.min(bottom + 16, size.height - painter.height);
+    final shapeBottom = layout.toPixel(Offset(bounds.left, bounds.bottom)).dy;
+    // Pastdagi devor yozuvi bilan qo'shilib ketmasligi uchun uning ostiga.
+    final base = math.max(shapeBottom, layout.contentBottom);
+    final y = math.min(base + _areaGap, size.height - painter.height);
     painter.paint(canvas, Offset((size.width - painter.width) / 2, y));
   }
 
   // --- Yozuvlar ------------------------------------------------------------
 
-  List<_EdgeLabel> _buildEdgeLabels() {
+  List<_EdgeLabel> _buildEdgeLabels(double factor) {
+    final bounds = geometry.bounds;
     final result = <_EdgeLabel>[];
     for (final edge in geometry.edges) {
       if (!edge.showLength || edge.length <= 0) continue;
+      // Umumiy o'lcham strelkasi shu devor uzunligini allaqachon ko'rsatgan
+      // bo'lsa, uni ikkinchi marta yozmaymiz.
+      if (_duplicatesSpan(edge, bounds)) continue;
       final text = Fmt.meters(edge.length);
       final painter = _textPainter(
         text,
         color: edge.implied ? AppColors.accent : textColor,
-        size: 12.5,
+        size: 12.5 * factor,
         weight: FontWeight.w500,
       );
       result.add(_EdgeLabel(painter, edge.mid, edge.outwardNormal));
@@ -327,17 +419,29 @@ class SketchPainter extends CustomPainter {
     return result;
   }
 
-  TextPainter _buildSpanLabel() => _textPainter(
+  /// Devor yozuvi umumiy o'lcham strelkasi bilan bir xilmi.
+  bool _duplicatesSpan(RoomEdge edge, Rect bounds) {
+    if (!showSpan) return false;
+    // Faqat shaklning yuqori chegarasida yotgan, tashqariga (yuqoriga) qaragan
+    // va uzunligi umumiy o'lchamga teng devor.
+    if (edge.outwardNormal.dy > -0.98) return false;
+    if ((edge.length - bounds.width).abs() > 0.01) return false;
+    if ((edge.start.dy - bounds.top).abs() > 0.001) return false;
+    if ((edge.end.dy - bounds.top).abs() > 0.001) return false;
+    return true;
+  }
+
+  TextPainter _buildSpanLabel(double factor) => _textPainter(
         Fmt.meters(geometry.bounds.width),
         color: textColor,
-        size: 12.5,
+        size: 12.5 * factor,
         weight: FontWeight.w500,
       );
 
-  TextPainter _buildAreaLabel() => _textPainter(
+  TextPainter _buildAreaLabel(double factor) => _textPainter(
         'S ≈ ${Fmt.area(geometry.area)}',
         color: mutedColor,
-        size: 12.5,
+        size: 12.5 * factor,
       );
 
   TextPainter _textPainter(
@@ -408,10 +512,25 @@ class SketchPainter extends CustomPainter {
 }
 
 class _Layout {
-  const _Layout({required this.scale, required this.origin});
+  const _Layout({
+    required this.scale,
+    required this.origin,
+    this.contentTop = 0,
+    this.contentBottom = 0,
+    this.fits = true,
+  });
 
   final double scale;
   final Offset origin;
+
+  /// Shakl va devor yozuvlarining eng yuqori cheti (piksel).
+  final double contentTop;
+
+  /// Shakl va devor yozuvlarining eng pastki cheti (piksel).
+  final double contentBottom;
+
+  /// Butun kompozitsiya maydonga sig'dimi.
+  final bool fits;
 
   Offset toPixel(Offset point) => Offset(
         origin.dx + point.dx * scale,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/estimate.dart';
 import '../core/formatters.dart';
 import '../core/geometry.dart';
 import '../core/ids.dart';
@@ -50,8 +51,18 @@ class _EditorScreenState extends State<EditorScreen> {
   late final TextEditingController _sideAController;
   late final TextEditingController _sideBController;
 
+  // Balandlik va material
+  late final TextEditingController _heightController;
+  double _reservePercent = 0;
+
   // Ko'p burchakli
   final List<_WallDraft> _walls = <_WallDraft>[];
+
+  /// Har bir maydonning oxirgi ko'rilgan matni. Faqat matn chindan o'zgarganda
+  /// "saqlanmagan o'zgarish" belgisi qo'yiladi — fokus yoki kursor harakati
+  /// hisobga olinmaydi.
+  final Map<TextEditingController, String> _seenText =
+      <TextEditingController, String>{};
 
   GeoPoint? _location;
   double _rotation = 0;
@@ -77,6 +88,8 @@ class _EditorScreenState extends State<EditorScreen> {
     _spanController = _numberController(inputs['span']);
     _sideAController = _numberController(inputs['sideA']);
     _sideBController = _numberController(inputs['sideB']);
+    _heightController = _numberController(initial?.height);
+    _reservePercent = initial?.reservePercent ?? 0;
 
     if (initial != null && initial.kind == RoomKind.polygon) {
       for (final wall in initial.walls) {
@@ -84,22 +97,40 @@ class _EditorScreenState extends State<EditorScreen> {
           _WallDraft(text: Fmt.number(wall.length), turn: wall.turn),
         );
       }
-      _rotation = initial.startHeading;
     }
     if (_walls.isEmpty) _applyTemplate(_Template.rectangle, notify: false);
 
+    // Burilish saqlangan holatdan tiklanadi (tayyor shakllar uchun ham).
+    _rotation = inputs['rotation'] ??
+        (initial != null && initial.kind == RoomKind.polygon
+            ? initial.startHeading
+            : 0);
+
     for (final controller in <TextEditingController>[
+      _nameController,
+      _descriptionController,
       _lengthController,
       _widthController,
       _spanController,
       _sideAController,
       _sideBController,
+      _heightController,
     ]) {
-      controller.addListener(_onChanged);
+      _watch(controller);
     }
     for (final wall in _walls) {
-      wall.controller.addListener(_onChanged);
+      _watch(wall.controller);
     }
+  }
+
+  /// Maydonni kuzatishga qo'yadi.
+  void _watch(TextEditingController controller) {
+    _seenText[controller] = controller.text;
+    controller.addListener(() => _onControllerChanged(controller));
+  }
+
+  void _unwatch(TextEditingController controller) {
+    _seenText.remove(controller);
   }
 
   TextEditingController _numberController(double? value) {
@@ -108,8 +139,11 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 
-  void _onChanged() {
+  void _onControllerChanged(TextEditingController controller) {
     if (!mounted) return;
+    // Kursor yoki fokus o'zgarishi ham xabar beradi — faqat matnni tekshiramiz.
+    if (_seenText[controller] == controller.text) return;
+    _seenText[controller] = controller.text;
     setState(() => _dirty = true);
   }
 
@@ -122,9 +156,11 @@ class _EditorScreenState extends State<EditorScreen> {
     _spanController.dispose();
     _sideAController.dispose();
     _sideBController.dispose();
+    _heightController.dispose();
     for (final wall in _walls) {
       wall.dispose();
     }
+    _seenText.clear();
     super.dispose();
   }
 
@@ -166,21 +202,30 @@ class _EditorScreenState extends State<EditorScreen> {
     }
   }
 
+  /// Kiritilgan balandlik (bo'sh yoki noto'g'ri bo'lsa `null`).
+  double? _height() {
+    final value = Fmt.parseNumber(_heightController.text);
+    if (value == null || value <= 0 || value > 30) return null;
+    return value;
+  }
+
   Map<String, double> _presetInputs() {
     switch (_kind) {
       case RoomKind.rectangle:
         return <String, double>{
           'length': Fmt.parseNumber(_lengthController.text) ?? 0,
           'width': Fmt.parseNumber(_widthController.text) ?? 0,
+          'rotation': _rotation,
         };
       case RoomKind.trapezoid:
         return <String, double>{
           'span': Fmt.parseNumber(_spanController.text) ?? 0,
           'sideA': Fmt.parseNumber(_sideAController.text) ?? 0,
           'sideB': Fmt.parseNumber(_sideBController.text) ?? 0,
+          'rotation': _rotation,
         };
       case RoomKind.polygon:
-        return const <String, double>{};
+        return <String, double>{'rotation': _rotation};
     }
   }
 
@@ -188,7 +233,7 @@ class _EditorScreenState extends State<EditorScreen> {
 
   void _addWall() {
     final draft = _WallDraft(turn: 90);
-    draft.controller.addListener(_onChanged);
+    _watch(draft.controller);
     setState(() {
       _walls.add(draft);
       _dirty = true;
@@ -201,14 +246,14 @@ class _EditorScreenState extends State<EditorScreen> {
       return;
     }
     final draft = _walls.removeAt(index);
-    draft.controller.removeListener(_onChanged);
+    _unwatch(draft.controller);
     draft.dispose();
     setState(() => _dirty = true);
   }
 
   void _applyTemplate(_Template template, {bool notify = true}) {
     for (final wall in _walls) {
-      wall.controller.removeListener(_onChanged);
+      _unwatch(wall.controller);
       wall.dispose();
     }
     _walls
@@ -222,7 +267,7 @@ class _EditorScreenState extends State<EditorScreen> {
         ),
       );
     for (final wall in _walls) {
-      wall.controller.addListener(_onChanged);
+      _watch(wall.controller);
     }
     if (notify) setState(() => _dirty = true);
   }
@@ -268,6 +313,9 @@ class _EditorScreenState extends State<EditorScreen> {
           presetInputs: _presetInputs(),
           location: _location,
           clearLocation: _location == null,
+          height: _height(),
+          clearHeight: _height() == null,
+          reservePercent: _reservePercent,
           updatedAt: now,
         ),
       );
@@ -282,6 +330,8 @@ class _EditorScreenState extends State<EditorScreen> {
           startHeading: built.startHeading,
           presetInputs: _presetInputs(),
           location: _location,
+          height: _height(),
+          reservePercent: _reservePercent,
           createdAt: now,
           updatedAt: now,
         ),
@@ -342,6 +392,7 @@ class _EditorScreenState extends State<EditorScreen> {
     final implied = geometry.impliedEdge;
 
     return PopScope<Object?>(
+      key: const Key('editor-pop-scope'),
       canPop: !_dirty,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
@@ -440,7 +491,6 @@ class _EditorScreenState extends State<EditorScreen> {
                   TextField(
                     controller: _nameController,
                     textCapitalization: TextCapitalization.sentences,
-                    onChanged: (_) => _dirty = true,
                     style: const TextStyle(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       labelText: 'Nomi',
@@ -453,7 +503,6 @@ class _EditorScreenState extends State<EditorScreen> {
                     maxLines: 4,
                     minLines: 2,
                     textCapitalization: TextCapitalization.sentences,
-                    onChanged: (_) => _dirty = true,
                     style: const TextStyle(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       labelText: 'Tavsif',
@@ -462,6 +511,26 @@ class _EditorScreenState extends State<EditorScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SectionCard(
+              title: 'Balandlik va material',
+              icon: Icons.height,
+              subtitle: 'Devorlar yuzasi, hajm va zaxira hisobi uchun',
+              child: _HeightSection(
+                controller: _heightController,
+                reservePercent: _reservePercent,
+                estimate: RoomEstimate(
+                  floorArea: geometry.area,
+                  perimeter: geometry.perimeter,
+                  height: _height(),
+                  reservePercent: _reservePercent,
+                ),
+                onReserveChanged: (value) => setState(() {
+                  _reservePercent = value;
+                  _dirty = true;
+                }),
               ),
             ),
             const SizedBox(height: 12),
@@ -608,6 +677,80 @@ class _EditorScreenState extends State<EditorScreen> {
           ],
         );
     }
+  }
+}
+
+/// Balandlik va zaxira foizini kiritish bo'limi.
+class _HeightSection extends StatelessWidget {
+  const _HeightSection({
+    required this.controller,
+    required this.reservePercent,
+    required this.estimate,
+    required this.onReserveChanged,
+  });
+
+  final TextEditingController controller;
+  final double reservePercent;
+  final RoomEstimate estimate;
+  final ValueChanged<double> onReserveChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        MeasureField(
+          controller: controller,
+          label: 'Xona balandligi (ixtiyoriy)',
+          hint: '2.80',
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          'Material zaxirasi',
+          style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: <Widget>[
+            for (final option in RoomEstimate.reserveOptions)
+              ChoiceChip(
+                label: Text(option == 0 ? "Yo'q" : '+${option.round()}%'),
+                selected: (reservePercent - option).abs() < 0.01,
+                onSelected: (_) => onReserveChanged(option),
+                selectedColor: AppColors.shapeFill,
+                backgroundColor: AppColors.surfaceHigh,
+                showCheckmark: false,
+                labelStyle: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textPrimary,
+                ),
+                side: BorderSide.none,
+              ),
+          ],
+        ),
+        if (estimate.hasHeight) ...<Widget>[
+          const SizedBox(height: 14),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: StatTile(
+                  label: 'Devorlar yuzasi',
+                  value: Fmt.area(estimate.wallArea!),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: StatTile(
+                  label: 'Hajmi',
+                  value: '${Fmt.number(estimate.volume!)} m³',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
   }
 }
 
