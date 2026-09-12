@@ -1,0 +1,90 @@
+name: Hisob APK
+
+# "Hisob" Flutter ilovasini release APK sifatida yig'adi.
+# Natija: Actions artifact + GitHub Release (APK biriktirilgan).
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'xona_olchov/**'
+      - '.github/workflows/hisob-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hisob-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build release APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: xona_olchov
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.47.4'
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Tests
+        run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Name the APK
+        run: |
+          VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d ' ' | cut -d+ -f1)"
+          cp build/app/outputs/flutter-apk/app-release.apk "build/Hisob-${VERSION}.apk"
+          echo "APP_VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "APK_PATH=xona_olchov/build/Hisob-${VERSION}.apk" >> "$GITHUB_ENV"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hisob-${{ env.APP_VERSION }}-build${{ github.run_number }}
+          path: ${{ env.APK_PATH }}
+          if-no-files-found: error
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: hisob-v${{ env.APP_VERSION }}-${{ github.run_number }}
+          name: Hisob v${{ env.APP_VERSION }} (build ${{ github.run_number }})
+          prerelease: ${{ github.ref != 'refs/heads/main' }}
+          files: ${{ env.APK_PATH }}
+          body: |
+            **Hisob** — xona o'lchamlari, chizma va yuza.
+
+            - Branch: `${{ github.ref_name }}`
+            - Commit: ${{ github.sha }}
+            - APK: `Hisob-${{ env.APP_VERSION }}.apk` (release, imzolangan)
+
+            O'rnatish: APK'ni telefonga yuklab olib oching; "Noma'lum manbalar"ga ruxsat bering.
