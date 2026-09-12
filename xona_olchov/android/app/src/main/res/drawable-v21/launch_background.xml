@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Ilova ochilayotganda ko'rinadigan fon — mavzu bilan bir xil qorong'i rang. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="#151515" />
+    <item android:drawable="@color/launch_background" />
 </layer-list>
