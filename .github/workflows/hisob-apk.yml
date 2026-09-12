@@ -77,6 +77,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: hisob-v${{ env.APP_VERSION }}-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
           name: Hisob v${{ env.APP_VERSION }} (build ${{ github.run_number }})
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           files: ${{ env.APK_PATH }}
