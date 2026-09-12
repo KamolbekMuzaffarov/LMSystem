@@ -133,7 +133,7 @@ class LocationService {
   /// Koordinatalardan manzil nomini topadi (internet talab qiladi).
   Future<String?> describe(GeoPoint point) async {
     try {
-      final places = await placemarkFromCoordinates(
+      final places = await Geocoding().placemarkFromCoordinates(
         point.latitude,
         point.longitude,
       );

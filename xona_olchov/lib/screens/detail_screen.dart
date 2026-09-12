@@ -180,11 +180,11 @@ class _SketchStage extends StatelessWidget {
         PageRouteBuilder<void>(
           opaque: false,
           barrierColor: AppColors.background,
-          pageBuilder: (_, __, ___) => _FullscreenSketch(
+          pageBuilder: (_, _, _) => _FullscreenSketch(
             sketch: sketch,
             showAngles: showAngles,
           ),
-          transitionsBuilder: (_, animation, __, child) =>
+          transitionsBuilder: (_, animation, _, child) =>
               FadeTransition(opacity: animation, child: child),
         ),
       ),

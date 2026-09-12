@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                           itemCount: items.length,
                           scrollCacheExtent: const ScrollCacheExtent.pixels(600),
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final sketch = items[index];
