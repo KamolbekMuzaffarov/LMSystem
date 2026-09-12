@@ -56,21 +56,30 @@ jobs:
       - name: Tests
         run: flutter test
 
-      - name: Build APK
+      # Universal APK (barcha ABI) + har bir ABI uchun alohida kichik APK.
+      - name: Build APK (universal)
         run: flutter build apk --release
 
-      - name: Name the APK
+      - name: Build APK (per ABI)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Name the APKs
         run: |
           VERSION="$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d ' ' | cut -d+ -f1)"
-          cp build/app/outputs/flutter-apk/app-release.apk "build/Hisob-${VERSION}.apk"
+          OUT=build/app/outputs/flutter-apk
+          mkdir -p build/dist
+          cp "$OUT/app-release.apk"               "build/dist/Hisob-${VERSION}.apk"
+          cp "$OUT/app-arm64-v8a-release.apk"     "build/dist/Hisob-${VERSION}-arm64.apk"
+          cp "$OUT/app-armeabi-v7a-release.apk"   "build/dist/Hisob-${VERSION}-armv7.apk"
+          cp "$OUT/app-x86_64-release.apk"        "build/dist/Hisob-${VERSION}-x86_64.apk"
+          ls -la build/dist
           echo "APP_VERSION=${VERSION}" >> "$GITHUB_ENV"
-          echo "APK_PATH=xona_olchov/build/Hisob-${VERSION}.apk" >> "$GITHUB_ENV"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Hisob-${{ env.APP_VERSION }}-build${{ github.run_number }}
-          path: ${{ env.APK_PATH }}
+          path: xona_olchov/build/dist/*.apk
           if-no-files-found: error
 
       - name: Publish release
@@ -80,12 +89,17 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: Hisob v${{ env.APP_VERSION }} (build ${{ github.run_number }})
           prerelease: ${{ github.ref != 'refs/heads/main' }}
-          files: ${{ env.APK_PATH }}
+          files: xona_olchov/build/dist/*.apk
           body: |
             **Hisob** — xona o'lchamlari, chizma va yuza.
 
             - Branch: `${{ github.ref_name }}`
             - Commit: ${{ github.sha }}
-            - APK: `Hisob-${{ env.APP_VERSION }}.apk` (release, imzolangan)
+
+            Fayllar (hammasi bir xil kalit bilan imzolangan):
+            - `Hisob-${{ env.APP_VERSION }}-arm64.apk` — zamonaviy telefonlar uchun (tavsiya etiladi, eng kichik)
+            - `Hisob-${{ env.APP_VERSION }}-armv7.apk` — eski 32-bit qurilmalar
+            - `Hisob-${{ env.APP_VERSION }}-x86_64.apk` — emulyator / x86 planshetlar
+            - `Hisob-${{ env.APP_VERSION }}.apk` — universal (barcha ABI, katta hajm)
 
             O'rnatish: APK'ni telefonga yuklab olib oching; "Noma'lum manbalar"ga ruxsat bering.
