@@ -21,7 +21,10 @@ class Bootstrap extends StatefulWidget {
 }
 
 class _BootstrapState extends State<Bootstrap> {
-  late final Future<SketchStore> _future = SketchStore.open();
+  late Future<SketchStore> _future = SketchStore.open();
+
+  /// Xotira ochilmasa foydalanuvchi qayta urinib ko'radi.
+  void _retry() => setState(() => _future = SketchStore.open());
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +36,10 @@ class _BootstrapState extends State<Bootstrap> {
         }
         final store = snapshot.data;
         if (store == null) {
-          return _SplashApp(error: '${snapshot.error ?? "Noma‘lum xato"}');
+          return _SplashApp(
+            error: '${snapshot.error ?? "Noma‘lum xato"}',
+            onRetry: _retry,
+          );
         }
         return XonaOlchovApp(store: store);
       },
@@ -42,9 +48,10 @@ class _BootstrapState extends State<Bootstrap> {
 }
 
 class _SplashApp extends StatelessWidget {
-  const _SplashApp({this.error});
+  const _SplashApp({this.error, this.onRetry});
 
   final String? error;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +97,7 @@ class _SplashApp extends StatelessWidget {
                     color: AppColors.shapeStroke,
                   ),
                 )
-              else
+              else ...<Widget>[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Text(
@@ -102,6 +109,13 @@ class _SplashApp extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text('Qayta urinish'),
+                ),
+              ],
             ],
           ),
         ),

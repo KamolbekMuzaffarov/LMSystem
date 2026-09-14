@@ -91,8 +91,8 @@ class GeoPoint {
   factory GeoPoint.fromJson(Map<String, dynamic> json) {
     final capturedAt = json['capturedAt'];
     return GeoPoint(
-      latitude: _toDouble(json['lat']),
-      longitude: _toDouble(json['lng']),
+      latitude: _toDouble(json['lat']) ?? 0,
+      longitude: _toDouble(json['lng']) ?? 0,
       address: json['address'] as String?,
       accuracy: json['accuracy'] is num
           ? (json['accuracy'] as num).toDouble()
@@ -103,10 +103,28 @@ class GeoPoint {
     );
   }
 
-  static double _toDouble(Object? value) {
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0;
-    return 0;
+  /// Koordinatalari yo'q yoki yaroqsiz bo'lsa `null` qaytaradi.
+  ///
+  /// Buzilgan zaxira nusxa xonaga soxta "0, 0" nuqtasini yopishtirib
+  /// qo'ymasligi uchun kerak.
+  static GeoPoint? tryFromJson(Map<String, dynamic> json) {
+    final latitude = _toDouble(json['lat']);
+    final longitude = _toDouble(json['lng']);
+    if (latitude == null || longitude == null) return null;
+    final point = GeoPoint.fromJson(json);
+    return point.isValid ? point : null;
+  }
+
+  static double? _toDouble(Object? value) {
+    if (value is num) {
+      final result = value.toDouble();
+      return result.isFinite ? result : null;
+    }
+    if (value is String) {
+      final parsed = double.tryParse(value.trim());
+      return parsed != null && parsed.isFinite ? parsed : null;
+    }
+    return null;
   }
 
   @override

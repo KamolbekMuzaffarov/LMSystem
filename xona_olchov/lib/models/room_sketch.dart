@@ -1,6 +1,7 @@
 import '../core/estimate.dart';
 import '../core/geometry.dart';
 import 'geo_point.dart';
+import 'opening.dart';
 import 'wall.dart';
 
 /// Xona shaklining turi — tahrirlash oynasidagi rejim.
@@ -40,6 +41,7 @@ class RoomSketch {
     this.location,
     this.height,
     this.reservePercent = 0,
+    this.openings = const <Opening>[],
   });
 
   final String id;
@@ -62,6 +64,9 @@ class RoomSketch {
   /// Material zaxirasi, %.
   final double reservePercent;
 
+  /// Devordagi eshik va derazalar.
+  final List<Opening> openings;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -81,6 +86,7 @@ class RoomSketch {
         perimeter: perimeter,
         height: height,
         reservePercent: reservePercent,
+        openings: openings,
       );
 
   /// Ro'yxatda ko'rsatiladigan nom.
@@ -98,6 +104,7 @@ class RoomSketch {
     GeoPoint? location,
     double? height,
     double? reservePercent,
+    List<Opening>? openings,
     DateTime? updatedAt,
     bool clearLocation = false,
     bool clearHeight = false,
@@ -113,6 +120,7 @@ class RoomSketch {
       location: clearLocation ? null : (location ?? this.location),
       height: clearHeight ? null : (height ?? this.height),
       reservePercent: reservePercent ?? this.reservePercent,
+      openings: openings ?? this.openings,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );
@@ -132,6 +140,7 @@ class RoomSketch {
       location: location,
       height: height,
       reservePercent: reservePercent,
+      openings: openings,
       createdAt: now,
       updatedAt: now,
     );
@@ -148,6 +157,8 @@ class RoomSketch {
         if (location != null) 'location': location!.toJson(),
         if (height != null) 'height': height,
         if (reservePercent != 0) 'reservePercent': reservePercent,
+        if (openings.isNotEmpty)
+          'openings': openings.map((o) => o.toJson()).toList(growable: false),
         'createdAt': createdAt.toUtc().toIso8601String(),
         'updatedAt': updatedAt.toUtc().toIso8601String(),
       };
@@ -173,6 +184,16 @@ class RoomSketch {
       });
     }
 
+    final rawOpenings = json['openings'];
+    final openings = <Opening>[];
+    if (rawOpenings is List) {
+      for (final item in rawOpenings) {
+        if (item is! Map) continue;
+        final opening = Opening.fromJson(Map<String, dynamic>.from(item));
+        if (opening.isValid) openings.add(opening);
+      }
+    }
+
     final rawLocation = json['location'];
     final createdAt =
         DateTime.tryParse('${json['createdAt']}')?.toLocal() ?? DateTime.now();
@@ -188,14 +209,15 @@ class RoomSketch {
       walls: List<Wall>.unmodifiable(walls),
       presetInputs: Map<String, double>.unmodifiable(inputs),
       location: rawLocation is Map
-          ? GeoPoint.fromJson(Map<String, dynamic>.from(rawLocation))
+          ? GeoPoint.tryFromJson(Map<String, dynamic>.from(rawLocation))
           : null,
-      height: json['height'] is num && (json['height'] as num).toDouble() > 0
-          ? (json['height'] as num).toDouble()
+      height: json['height'] is num
+          ? RoomEstimate.validHeight((json['height'] as num).toDouble())
           : null,
       reservePercent: json['reservePercent'] is num
           ? RoomEstimate.clampReserve((json['reservePercent'] as num).toDouble())
           : 0,
+      openings: List<Opening>.unmodifiable(openings),
       createdAt: createdAt,
       updatedAt:
           DateTime.tryParse('${json['updatedAt']}')?.toLocal() ?? createdAt,

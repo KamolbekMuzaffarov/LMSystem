@@ -17,9 +17,8 @@ class XonaOlchovApp extends StatelessWidget {
       child: MaterialApp(
         title: AppInfo.name,
         debugShowCheckedModeBanner: false,
+        // Ilova faqat qorong'i mavzuda — tizim sozlamasiga bog'liq emas.
         theme: AppTheme.build(),
-        themeMode: ThemeMode.dark,
-        darkTheme: AppTheme.build(),
         scrollBehavior: const _SmoothScrollBehavior(),
         home: const HomeScreen(),
         builder: (context, child) {

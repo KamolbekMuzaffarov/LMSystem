@@ -33,8 +33,21 @@ class SketchStore extends ChangeNotifier {
 
   static Future<SketchStore> open() async {
     final prefs = await SharedPreferences.getInstance();
-    final loaded = _read(prefs, storageKey) ?? _read(prefs, backupKey) ?? const <RoomSketch>[];
-    return SketchStore._(prefs, loaded);
+    return SketchStore._(prefs, readAll(prefs));
+  }
+
+  /// Asosiy yozuvni, u bo'sh bo'lsa zaxira nusxani o'qiydi.
+  ///
+  /// Asosiy yozuv o'qilsa-yu, ichi bo'sh chiqsa ham zaxiraga qaraladi:
+  /// yozish yarim yo'lda uzilib, `items` bo'sh qolishi mumkin — bunday
+  /// holatda chizmalar zaxiradan tiklanadi.
+  @visibleForTesting
+  static List<RoomSketch> readAll(SharedPreferences prefs) {
+    final primary = _read(prefs, storageKey);
+    if (primary != null && primary.isNotEmpty) return primary;
+    final backup = _read(prefs, backupKey);
+    if (backup != null && backup.isNotEmpty) return backup;
+    return primary ?? backup ?? const <RoomSketch>[];
   }
 
   /// Testlar uchun: tayyor ro'yxat bilan ombor yaratish.

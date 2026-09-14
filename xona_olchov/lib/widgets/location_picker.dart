@@ -71,10 +71,7 @@ class _LocationPickerState extends State<LocationPicker> {
   }
 
   void _toast(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    if (mounted) context.showSnack(message);
   }
 
   @override

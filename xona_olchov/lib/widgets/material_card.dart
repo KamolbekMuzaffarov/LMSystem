@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../core/estimate.dart';
 import '../core/formatters.dart';
+import '../models/opening.dart';
 import '../theme/app_theme.dart';
 import 'ui_bits.dart';
 
-/// Material hisobi: pol/potolok, devorlar, hajm va zaxira bilan miqdor.
+/// Material hisobi: pol/potolok, devorlar, hajm, plintus va narx.
 class MaterialCard extends StatefulWidget {
   const MaterialCard({super.key, required this.estimate});
 
@@ -27,17 +28,29 @@ enum _Surface {
 
 class _MaterialCardState extends State<MaterialCard> {
   final TextEditingController _perUnit = TextEditingController();
+  final TextEditingController _price = TextEditingController();
   _Surface _surface = _Surface.floor;
 
   @override
   void dispose() {
     _perUnit.dispose();
+    _price.dispose();
     super.dispose();
   }
 
-  double _baseArea() {
+  /// Hozir tanlash mumkin bo'lgan yuzalar.
+  ///
+  /// Balandlik o'chirilsa devor variantlari yo'qoladi — tanlov ham
+  /// avtomatik polga qaytadi, aks holda hisob 0 bo'lib qolardi.
+  List<_Surface> get _available => <_Surface>[
+        _Surface.floor,
+        if (widget.estimate.hasHeight) _Surface.walls,
+        if (widget.estimate.hasHeight) _Surface.both,
+      ];
+
+  double _baseArea(_Surface surface) {
     final estimate = widget.estimate;
-    return switch (_surface) {
+    return switch (surface) {
       _Surface.floor => estimate.floorArea,
       _Surface.walls => estimate.wallArea ?? 0,
       _Surface.both => estimate.totalSurface ?? estimate.floorArea,
@@ -47,17 +60,14 @@ class _MaterialCardState extends State<MaterialCard> {
   @override
   Widget build(BuildContext context) {
     final estimate = widget.estimate;
-    final surfaces = <_Surface>[
-      _Surface.floor,
-      if (estimate.hasHeight) _Surface.walls,
-      if (estimate.hasHeight) _Surface.both,
-    ];
-    final base = _baseArea();
+    final surfaces = _available;
+    final surface = surfaces.contains(_surface) ? _surface : _Surface.floor;
+    final base = _baseArea(surface);
     final needed = estimate.withReserve(base);
     final perUnit = Fmt.parseNumber(_perUnit.text);
-    final units = perUnit == null
-        ? 0
-        : RoomEstimate.unitsNeeded(needed, perUnit);
+    final units =
+        perUnit == null ? 0 : RoomEstimate.unitsNeeded(needed, perUnit);
+    final cost = RoomEstimate.totalCost(needed, Fmt.parseNumber(_price.text));
 
     return SectionCard(
       title: 'Material hisobi',
@@ -80,7 +90,7 @@ class _MaterialCardState extends State<MaterialCard> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: StatTile(
-                    label: 'Devorlar',
+                    label: estimate.hasOpenings ? 'Devorlar (sof)' : 'Devorlar',
                     value: Fmt.area(estimate.wallArea!),
                   ),
                 ),
@@ -90,7 +100,29 @@ class _MaterialCardState extends State<MaterialCard> {
                 Expanded(
                   child: StatTile(
                     label: 'Hajmi',
-                    value: '${Fmt.number(estimate.volume!)} m³',
+                    value: Fmt.volume(estimate.volume!),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: StatTile(
+                  label: estimate.openings.doorWidth > 0
+                      ? 'Plintus (eshiksiz)'
+                      : 'Plintus',
+                  value: Fmt.meters(estimate.skirtingLength),
+                ),
+              ),
+              if (estimate.hasOpenings) ...<Widget>[
+                const SizedBox(width: 10),
+                Expanded(
+                  child: StatTile(
+                    label: 'Eshik / deraza',
+                    value: Fmt.area(estimate.openingArea),
                   ),
                 ),
               ],
@@ -108,13 +140,13 @@ class _MaterialCardState extends State<MaterialCard> {
           if (surfaces.length > 1) ...<Widget>[
             SegmentedButton<_Surface>(
               segments: <ButtonSegment<_Surface>>[
-                for (final surface in surfaces)
+                for (final item in surfaces)
                   ButtonSegment<_Surface>(
-                    value: surface,
-                    label: Text(surface.title),
+                    value: item,
+                    label: Text(item.title),
                   ),
               ],
-              selected: <_Surface>{_surface},
+              selected: <_Surface>{surface},
               showSelectedIcon: false,
               onSelectionChanged: (value) =>
                   setState(() => _surface = value.first),
@@ -132,10 +164,10 @@ class _MaterialCardState extends State<MaterialCard> {
               children: <Widget>[
                 Row(
                   children: <Widget>[
-                    Expanded(
+                    const Expanded(
                       child: Text(
                         'Kerakli miqdor',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12.5,
                           color: AppColors.textSecondary,
                         ),
@@ -154,7 +186,8 @@ class _MaterialCardState extends State<MaterialCard> {
                 if (estimate.reservePercent > 0) ...<Widget>[
                   const SizedBox(height: 2),
                   Text(
-                    '${Fmt.area(base)} + ${estimate.reservePercent.round()}% zaxira',
+                    '${Fmt.area(base)} + '
+                    '${estimate.reservePercent.round()}% zaxira',
                     style: const TextStyle(
                       fontSize: 11.5,
                       color: AppColors.textSecondary,
@@ -162,59 +195,100 @@ class _MaterialCardState extends State<MaterialCard> {
                   ),
                 ],
                 const Divider(height: 20),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Expanded(
-                      child: TextField(
-                        controller: _perUnit,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
-                        onChanged: (_) => setState(() {}),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        decoration: const InputDecoration(
-                          isDense: true,
-                          labelText: '1 quti / rulon',
-                          hintText: '2.50',
-                          suffixText: 'm²',
-                          fillColor: AppColors.surface,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(
-                          units == 0 ? '—' : '$units ta',
-                          style: const TextStyle(
-                            fontFamily: kSerif,
-                            fontSize: 22,
-                            height: 1.1,
-                            color: AppColors.shapeStroke,
-                          ),
-                        ),
-                        const Text(
-                          'kerak',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                _CalcRow(
+                  controller: _perUnit,
+                  label: '1 quti / rulon',
+                  hint: '2.50',
+                  suffix: 'm²',
+                  result: units == 0 ? '—' : '$units ta',
+                  caption: 'kerak',
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 12),
+                _CalcRow(
+                  controller: _price,
+                  label: '1 m² narxi',
+                  hint: '85000',
+                  suffix: 'so‘m',
+                  result: cost == null ? '—' : Fmt.money(cost),
+                  caption: 'jami',
+                  onChanged: (_) => setState(() {}),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Kiritish maydoni → natija" juftligi.
+class _CalcRow extends StatelessWidget {
+  const _CalcRow({
+    required this.controller,
+    required this.label,
+    required this.hint,
+    required this.suffix,
+    required this.result,
+    required this.caption,
+    required this.onChanged,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final String hint;
+  final String suffix;
+  final String result;
+  final String caption;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: MeasureField(
+            controller: controller,
+            label: label,
+            hint: hint,
+            suffix: suffix,
+            isDense: true,
+            onChanged: onChanged,
+          ),
+        ),
+        const SizedBox(width: 12),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 84, maxWidth: 132),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(
+                  result,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontFamily: kSerif,
+                    fontSize: 22,
+                    height: 1.1,
+                    color: AppColors.shapeStroke,
+                  ),
+                ),
+              ),
+              Text(
+                caption,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

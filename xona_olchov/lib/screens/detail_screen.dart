@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/formatters.dart';
 import '../core/ids.dart';
 import '../data/sketch_store.dart';
+import '../models/opening.dart';
 import '../models/room_sketch.dart';
 import '../services/backup_service.dart';
 import '../theme/app_theme.dart';
@@ -28,19 +29,12 @@ class _DetailScreenState extends State<DetailScreen> {
   bool _showAngles = false;
   bool _busy = false;
 
-  void _snack(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
   Future<void> _shareImage(RoomSketch sketch) async {
     setState(() => _busy = true);
     final error = await BackupService.shareSketchImage(sketch);
     if (!mounted) return;
     setState(() => _busy = false);
-    if (error != null) _snack(error);
+    if (error != null) context.showSnack(error);
   }
 
   Future<void> _duplicate(RoomSketch sketch) async {
@@ -51,7 +45,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
     final ok = await store.add(copy);
     if (!mounted) return;
-    _snack(ok ? 'Nusxa saqlandi' : "Nusxani saqlab bo'lmadi");
+    context.showSnack(ok ? 'Nusxa saqlandi' : "Nusxani saqlab bo'lmadi");
     if (ok) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
@@ -120,24 +114,16 @@ class _DetailScreenState extends State<DetailScreen> {
             itemBuilder: (context) => const <PopupMenuEntry<_DetailAction>>[
               PopupMenuItem<_DetailAction>(
                 value: _DetailAction.share,
-                child: Row(
-                  children: <Widget>[
-                    Icon(Icons.ios_share, size: 17,
-                        color: AppColors.shapeStroke),
-                    SizedBox(width: 10),
-                    Text('Rasm qilib ulashish'),
-                  ],
+                child: MenuRow(
+                  icon: Icons.ios_share,
+                  text: 'Rasm qilib ulashish',
                 ),
               ),
               PopupMenuItem<_DetailAction>(
                 value: _DetailAction.duplicate,
-                child: Row(
-                  children: <Widget>[
-                    Icon(Icons.copy_all_outlined, size: 17,
-                        color: AppColors.shapeStroke),
-                    SizedBox(width: 10),
-                    Text('Nusxa olish'),
-                  ],
+                child: MenuRow(
+                  icon: Icons.copy_all_outlined,
+                  text: 'Nusxa olish',
                 ),
               ),
             ],
@@ -195,6 +181,10 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           const SizedBox(height: 12),
           MaterialCard(estimate: sketch.estimate),
+          if (sketch.openings.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 12),
+            _OpeningsCard(openings: sketch.openings),
+          ],
           if (sketch.description.trim().isNotEmpty) ...<Widget>[
             const SizedBox(height: 12),
             SectionCard(
@@ -403,6 +393,75 @@ class _WallTile extends StatelessWidget {
               fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Eshik va derazalar ro'yxati.
+class _OpeningsCard extends StatelessWidget {
+  const _OpeningsCard({required this.openings});
+
+  final List<Opening> openings;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      title: 'Eshik va derazalar',
+      icon: Icons.sensor_door_outlined,
+      subtitle: '${openings.pieces} ta · ${Fmt.area(openings.totalArea)} '
+          'devor yuzasidan ayrildi',
+      child: Column(
+        children: <Widget>[
+          for (var i = 0; i < openings.length; i++)
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: i == openings.length - 1 ? 0 : 8,
+              ),
+              child: Row(
+                children: <Widget>[
+                  Icon(
+                    switch (openings[i].kind) {
+                      OpeningKind.door => Icons.sensor_door_outlined,
+                      OpeningKind.window => Icons.window_outlined,
+                      OpeningKind.other => Icons.crop_free,
+                    },
+                    size: 16,
+                    color: AppColors.shapeStroke,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      openings[i].count > 1
+                          ? '${openings[i].kind.title} × ${openings[i].count}'
+                          : openings[i].kind.title,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    openings[i].sizeText,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    Fmt.area(openings[i].area),
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

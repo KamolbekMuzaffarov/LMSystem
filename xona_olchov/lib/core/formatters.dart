@@ -29,6 +29,23 @@ abstract final class Fmt {
   static String area(double value, {int digits = 2}) =>
       '${number(value, digits: digits)} m²';
 
+  /// 42.5 -> "42.50 m³"
+  static String volume(double value, {int digits = 2}) =>
+      '${number(value, digits: digits)} m³';
+
+  /// 1234567.8 -> "1 234 568" — uch xonadan ajratilgan pul miqdori.
+  static String money(double value) {
+    if (!value.isFinite) return '—';
+    final rounded = value.abs().round();
+    final digits = rounded.toString();
+    final buffer = StringBuffer(value < 0 ? '-' : '');
+    for (var i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(' ');
+      buffer.write(digits[i]);
+    }
+    return buffer.toString();
+  }
+
   /// Kichik joylar uchun qisqartma: 1234.5 -> "1234.5"
   static String compact(double value) {
     if (!value.isFinite) return '—';

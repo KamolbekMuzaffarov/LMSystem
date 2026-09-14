@@ -48,14 +48,15 @@ class _AboutBody extends StatelessWidget {
     (
       Icons.calculate_outlined,
       'Material hisobi',
-      'Balandlikni kiritsangiz devorlar yuzasi va hajmi chiqadi. Zaxira '
-          'foizini tanlab, kerakli quti yoki rulon sonini ko‘rasiz.',
+      'Balandlikni kiritsangiz devorlar yuzasi va hajmi chiqadi. Eshik va '
+          'derazalar devor yuzasidan ayriladi, plintus eshiksiz hisoblanadi. '
+          'Zaxira foizi, quti soni va 1 m² narxi bo‘yicha umumiy summa ham bor.',
     ),
     (
       Icons.ios_share,
       'Ulashish va zaxira',
-      'Chizmani rasm qilib yuborish, barcha chizmalarni bitta faylga saqlash '
-          'va keyin shu fayldan tiklash mumkin.',
+      'Chizmani rasm qilib yuborish, barcha chizmalarni zaxira faylga yoki '
+          'Excel ochadigan CSV jadvalga chiqarish va zaxiradan tiklash mumkin.',
     ),
   ];
 

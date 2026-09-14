@@ -15,7 +15,7 @@ import 'backup_sheet.dart';
 import 'detail_screen.dart';
 import 'editor_screen.dart';
 
-enum MenuAction { backup, restore, about }
+enum MenuAction { backup, csv, restore, about }
 
 enum SortMode {
   recent('Avval yangilari'),
@@ -80,23 +80,23 @@ class _HomeScreenState extends State<HomeScreen> {
       case MenuAction.restore:
         await BackupSheet.showRestore(context);
       case MenuAction.backup:
-        final store = SketchScope.read(context);
-        if (store.count == 0) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(content: Text('Hali saqlanadigan chizma yo‘q')),
-            );
-          return;
-        }
-        final error = await BackupService.shareBackup(store.sketches);
-        if (error != null && mounted) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(error)));
-        }
+        await _export(BackupService.shareBackup);
+      case MenuAction.csv:
+        await _export(BackupService.shareCsv);
     }
+  }
+
+  /// Barcha chizmalarni fayl qilib ulashadi (JSON zaxira yoki CSV jadval).
+  Future<void> _export(
+    Future<String?> Function(List<RoomSketch> sketches) share,
+  ) async {
+    final store = SketchScope.read(context);
+    if (store.count == 0) {
+      context.showSnack('Hali saqlanadigan chizma yo‘q');
+      return;
+    }
+    final error = await share(store.sketches);
+    if (error != null && mounted) context.showSnack(error);
   }
 
   Future<void> _openEditor([RoomSketch? sketch]) async {
@@ -141,35 +141,25 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context) => const <PopupMenuEntry<MenuAction>>[
               PopupMenuItem<MenuAction>(
                 value: MenuAction.backup,
-                child: Row(
-                  children: <Widget>[
-                    Icon(Icons.save_alt, size: 17,
-                        color: AppColors.shapeStroke),
-                    SizedBox(width: 10),
-                    Text('Zaxira nusxa saqlash'),
-                  ],
+                child: MenuRow(
+                  icon: Icons.save_alt,
+                  text: 'Zaxira nusxa saqlash',
+                ),
+              ),
+              PopupMenuItem<MenuAction>(
+                value: MenuAction.csv,
+                child: MenuRow(
+                  icon: Icons.table_chart_outlined,
+                  text: 'Jadval (CSV) yuklab olish',
                 ),
               ),
               PopupMenuItem<MenuAction>(
                 value: MenuAction.restore,
-                child: Row(
-                  children: <Widget>[
-                    Icon(Icons.restore, size: 17, color: AppColors.shapeStroke),
-                    SizedBox(width: 10),
-                    Text('Zaxiradan tiklash'),
-                  ],
-                ),
+                child: MenuRow(icon: Icons.restore, text: 'Zaxiradan tiklash'),
               ),
               PopupMenuItem<MenuAction>(
                 value: MenuAction.about,
-                child: Row(
-                  children: <Widget>[
-                    Icon(Icons.info_outline, size: 17,
-                        color: AppColors.shapeStroke),
-                    SizedBox(width: 10),
-                    Text('Ilova haqida'),
-                  ],
-                ),
+                child: MenuRow(icon: Icons.info_outline, text: 'Ilova haqida'),
               ),
             ],
           ),
@@ -353,16 +343,16 @@ class SketchCard extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 6,
                       children: <Widget>[
-                        _MiniChip(
+                        MiniChip(
                           icon: Icons.crop_square,
                           text: Fmt.area(sketch.area),
                           accent: true,
                         ),
-                        _MiniChip(
+                        MiniChip(
                           icon: Icons.timeline,
                           text: Fmt.meters(sketch.perimeter),
                         ),
-                        _MiniChip(
+                        MiniChip(
                           icon: Icons.shape_line_outlined,
                           text: '${sketch.geometry.vertices.length} burchak',
                         ),
@@ -406,48 +396,6 @@ class SketchCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _MiniChip extends StatelessWidget {
-  const _MiniChip({
-    required this.icon,
-    required this.text,
-    this.accent = false,
-  });
-
-  final IconData icon;
-  final String text;
-  final bool accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: accent ? AppColors.shapeFill : AppColors.surfaceHigh,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(
-            icon,
-            size: 12,
-            color: accent ? AppColors.shapeStroke : AppColors.textSecondary,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 11.5,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

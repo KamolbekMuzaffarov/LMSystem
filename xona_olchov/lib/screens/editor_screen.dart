@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../core/estimate.dart';
 import '../core/formatters.dart';
@@ -7,12 +6,13 @@ import '../core/geometry.dart';
 import '../core/ids.dart';
 import '../data/sketch_store.dart';
 import '../models/geo_point.dart';
+import '../models/opening.dart';
 import '../models/room_sketch.dart';
 import '../models/wall.dart';
 import '../theme/app_theme.dart';
 import '../widgets/location_picker.dart';
-import '../widgets/sketch_view.dart';
 import '../widgets/ui_bits.dart';
+import 'editor_parts.dart';
 
 /// Bitta devor qatorining tahrirlash holati.
 class _WallDraft {
@@ -25,6 +25,21 @@ class _WallDraft {
   double get length => Fmt.parseNumber(controller.text) ?? 0;
 
   void dispose() => controller.dispose();
+}
+
+/// Kiritilgan o'lchamlardan hisoblangan holat — bir qurilishda bir marta.
+class _Draft {
+  const _Draft({
+    required this.walls,
+    required this.startHeading,
+    required this.geometry,
+    required this.openings,
+  });
+
+  final List<Wall> walls;
+  final double startHeading;
+  final RoomGeometry geometry;
+  final List<Opening> openings;
 }
 
 class EditorScreen extends StatefulWidget {
@@ -57,6 +72,9 @@ class _EditorScreenState extends State<EditorScreen> {
 
   // Ko'p burchakli
   final List<_WallDraft> _walls = <_WallDraft>[];
+
+  // Eshik va derazalar
+  final List<OpeningDraft> _openings = <OpeningDraft>[];
 
   /// Har bir maydonning oxirgi ko'rilgan matni. Faqat matn chindan o'zgarganda
   /// "saqlanmagan o'zgarish" belgisi qo'yiladi — fokus yoki kursor harakati
@@ -93,12 +111,14 @@ class _EditorScreenState extends State<EditorScreen> {
 
     if (initial != null && initial.kind == RoomKind.polygon) {
       for (final wall in initial.walls) {
-        _walls.add(
-          _WallDraft(text: Fmt.number(wall.length), turn: wall.turn),
-        );
+        _walls.add(_WallDraft(text: Fmt.number(wall.length), turn: wall.turn));
       }
     }
-    if (_walls.isEmpty) _applyTemplate(_Template.rectangle, notify: false);
+    if (_walls.isEmpty) _applyTemplate(ShapeTemplate.rectangle, notify: false);
+
+    for (final opening in initial?.openings ?? const <Opening>[]) {
+      _openings.add(OpeningDraft.from(opening));
+    }
 
     // Burilish saqlangan holatdan tiklanadi (tayyor shakllar uchun ham).
     _rotation = inputs['rotation'] ??
@@ -121,6 +141,9 @@ class _EditorScreenState extends State<EditorScreen> {
     for (final wall in _walls) {
       _watch(wall.controller);
     }
+    for (final opening in _openings) {
+      _watchOpening(opening);
+    }
   }
 
   /// Maydonni kuzatishga qo'yadi.
@@ -131,6 +154,16 @@ class _EditorScreenState extends State<EditorScreen> {
 
   void _unwatch(TextEditingController controller) {
     _seenText.remove(controller);
+  }
+
+  void _watchOpening(OpeningDraft draft) {
+    _watch(draft.widthController);
+    _watch(draft.heightController);
+  }
+
+  void _unwatchOpening(OpeningDraft draft) {
+    _unwatch(draft.widthController);
+    _unwatch(draft.heightController);
   }
 
   TextEditingController _numberController(double? value) {
@@ -160,30 +193,49 @@ class _EditorScreenState extends State<EditorScreen> {
     for (final wall in _walls) {
       wall.dispose();
     }
+    for (final opening in _openings) {
+      opening.dispose();
+    }
     _seenText.clear();
     super.dispose();
   }
 
   // --- Geometriya ----------------------------------------------------------
 
+  double _value(TextEditingController controller) =>
+      Fmt.parseNumber(controller.text) ?? 0;
+
+  _Draft _draft() {
+    final built = _buildWalls();
+    return _Draft(
+      walls: built.walls,
+      startHeading: built.startHeading,
+      geometry: RoomGeometry.fromWalls(
+        built.walls,
+        startHeading: built.startHeading,
+      ),
+      openings: <Opening>[
+        for (final draft in _openings)
+          if (draft.toOpening().isValid) draft.toOpening(),
+      ],
+    );
+  }
+
   ({List<Wall> walls, double startHeading}) _buildWalls() {
+    const none = (walls: <Wall>[], startHeading: 0.0);
     switch (_kind) {
       case RoomKind.rectangle:
-        final length = Fmt.parseNumber(_lengthController.text) ?? 0;
-        final width = Fmt.parseNumber(_widthController.text) ?? 0;
-        if (length <= 0 || width <= 0) {
-          return (walls: const <Wall>[], startHeading: 0.0);
-        }
+        final length = _value(_lengthController);
+        final width = _value(_widthController);
+        if (length <= 0 || width <= 0) return none;
         final built = ShapePresets.rectangle(length: length, width: width);
         return (walls: built.walls, startHeading: built.startHeading + _rotation);
 
       case RoomKind.trapezoid:
-        final span = Fmt.parseNumber(_spanController.text) ?? 0;
-        final sideA = Fmt.parseNumber(_sideAController.text) ?? 0;
-        final sideB = Fmt.parseNumber(_sideBController.text) ?? 0;
-        if (span <= 0 || sideA <= 0 || sideB <= 0) {
-          return (walls: const <Wall>[], startHeading: 0.0);
-        }
+        final span = _value(_spanController);
+        final sideA = _value(_sideAController);
+        final sideB = _value(_sideBController);
+        if (span <= 0 || sideA <= 0 || sideB <= 0) return none;
         final built = ShapePresets.trapezoid(
           span: span,
           sideA: sideA,
@@ -192,41 +244,39 @@ class _EditorScreenState extends State<EditorScreen> {
         return (walls: built.walls, startHeading: built.startHeading + _rotation);
 
       case RoomKind.polygon:
-        final walls = <Wall>[];
-        for (final draft in _walls) {
-          if (draft.length > 0) {
-            walls.add(Wall(length: draft.length, turn: draft.turn));
-          }
-        }
-        return (walls: walls, startHeading: _rotation);
+        return (
+          walls: <Wall>[
+            for (final draft in _walls)
+              if (draft.length > 0) Wall(length: draft.length, turn: draft.turn),
+          ],
+          startHeading: _rotation,
+        );
     }
   }
 
-  /// Kiritilgan balandlik (bo'sh yoki noto'g'ri bo'lsa `null`).
-  double? _height() {
-    final value = Fmt.parseNumber(_heightController.text);
-    if (value == null || value <= 0 || value > 30) return null;
-    return value;
-  }
+  /// Kiritilgan balandlik: bo'sh yoki oraliqdan tashqarida bo'lsa `null`.
+  double? _height() =>
+      RoomEstimate.validHeight(Fmt.parseNumber(_heightController.text));
+
+  /// Balandlik yozilgan, lekin ruxsat etilgan oraliqda emas.
+  bool get _heightOutOfRange =>
+      Fmt.parseNumber(_heightController.text) != null && _height() == null;
 
   Map<String, double> _presetInputs() {
-    switch (_kind) {
-      case RoomKind.rectangle:
-        return <String, double>{
-          'length': Fmt.parseNumber(_lengthController.text) ?? 0,
-          'width': Fmt.parseNumber(_widthController.text) ?? 0,
+    return switch (_kind) {
+      RoomKind.rectangle => <String, double>{
+          'length': _value(_lengthController),
+          'width': _value(_widthController),
           'rotation': _rotation,
-        };
-      case RoomKind.trapezoid:
-        return <String, double>{
-          'span': Fmt.parseNumber(_spanController.text) ?? 0,
-          'sideA': Fmt.parseNumber(_sideAController.text) ?? 0,
-          'sideB': Fmt.parseNumber(_sideBController.text) ?? 0,
+        },
+      RoomKind.trapezoid => <String, double>{
+          'span': _value(_spanController),
+          'sideA': _value(_sideAController),
+          'sideB': _value(_sideBController),
           'rotation': _rotation,
-        };
-      case RoomKind.polygon:
-        return <String, double>{'rotation': _rotation};
-    }
+        },
+      RoomKind.polygon => <String, double>{'rotation': _rotation},
+    };
   }
 
   // --- Devorlar ------------------------------------------------------------
@@ -242,16 +292,18 @@ class _EditorScreenState extends State<EditorScreen> {
 
   void _removeWall(int index) {
     if (_walls.length <= 3) {
-      _snack('Kamida 3 ta devor bo‘lishi kerak');
+      context.showSnack('Kamida 3 ta devor bo‘lishi kerak');
       return;
     }
-    final draft = _walls.removeAt(index);
-    _unwatch(draft.controller);
-    draft.dispose();
-    setState(() => _dirty = true);
+    setState(() {
+      final draft = _walls.removeAt(index);
+      _unwatch(draft.controller);
+      draft.dispose();
+      _dirty = true;
+    });
   }
 
-  void _applyTemplate(_Template template, {bool notify = true}) {
+  void _applyTemplate(ShapeTemplate template, {bool notify = true}) {
     for (final wall in _walls) {
       _unwatch(wall.controller);
       wall.dispose();
@@ -272,21 +324,38 @@ class _EditorScreenState extends State<EditorScreen> {
     if (notify) setState(() => _dirty = true);
   }
 
+  // --- Eshik va derazalar --------------------------------------------------
+
+  void _addOpening(OpeningKind kind) {
+    final draft = OpeningDraft.preset(kind);
+    _watchOpening(draft);
+    setState(() {
+      _openings.add(draft);
+      _dirty = true;
+    });
+  }
+
+  void _removeOpening(int index) {
+    setState(() {
+      final draft = _openings.removeAt(index);
+      _unwatchOpening(draft);
+      draft.dispose();
+      _dirty = true;
+    });
+  }
+
   // --- Saqlash -------------------------------------------------------------
 
   Future<void> _save() async {
-    final built = _buildWalls();
-    final geometry = RoomGeometry.fromWalls(
-      built.walls,
-      startHeading: built.startHeading,
-    );
+    final draft = _draft();
+    final geometry = draft.geometry;
 
-    if (built.walls.isEmpty || geometry.vertices.length < 3) {
-      _snack('Kamida 3 ta devor o‘lchamini kiriting');
+    if (draft.walls.isEmpty || geometry.vertices.length < 3) {
+      context.showSnack('Kamida 3 ta devor o‘lchamini kiriting');
       return;
     }
     if (!geometry.hasArea) {
-      _snack(
+      context.showSnack(
         geometry.selfIntersecting
             ? 'Devorlar kesishmoqda — burilishlarni tekshiring'
             : 'Yuzani hisoblab bo‘lmadi, o‘lchamlarni tekshiring',
@@ -300,6 +369,7 @@ class _EditorScreenState extends State<EditorScreen> {
     final name = _nameController.text.trim().isEmpty
         ? 'Xona ${store.count + 1}'
         : _nameController.text.trim();
+    final height = _height();
 
     final bool ok;
     if (_isEditing) {
@@ -308,14 +378,15 @@ class _EditorScreenState extends State<EditorScreen> {
           name: name,
           description: _descriptionController.text.trim(),
           kind: _kind,
-          walls: built.walls,
-          startHeading: built.startHeading,
+          walls: draft.walls,
+          startHeading: draft.startHeading,
           presetInputs: _presetInputs(),
           location: _location,
           clearLocation: _location == null,
-          height: _height(),
-          clearHeight: _height() == null,
+          height: height,
+          clearHeight: height == null,
           reservePercent: _reservePercent,
+          openings: draft.openings,
           updatedAt: now,
         ),
       );
@@ -326,12 +397,13 @@ class _EditorScreenState extends State<EditorScreen> {
           name: name,
           description: _descriptionController.text.trim(),
           kind: _kind,
-          walls: built.walls,
-          startHeading: built.startHeading,
+          walls: draft.walls,
+          startHeading: draft.startHeading,
           presetInputs: _presetInputs(),
           location: _location,
-          height: _height(),
+          height: height,
           reservePercent: _reservePercent,
+          openings: draft.openings,
           createdAt: now,
           updatedAt: now,
         ),
@@ -341,18 +413,19 @@ class _EditorScreenState extends State<EditorScreen> {
     if (!mounted) return;
     setState(() => _saving = false);
     if (!ok) {
-      _snack('Saqlashda xato: ${store.lastError ?? "noma‘lum"}');
+      context.showSnack('Saqlashda xato: ${store.lastError ?? "noma‘lum"}');
       return;
     }
+    // Xabar ekran yopilgandan keyin ko'rinadi — messenger'ni oldindan olamiz.
+    final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
-    _snack(_isEditing ? 'Chizma yangilandi' : 'Chizma saqlandi');
-  }
-
-  void _snack(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
+    messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+      ..showSnackBar(
+        SnackBar(
+          content: Text(_isEditing ? 'Chizma yangilandi' : 'Chizma saqlandi'),
+        ),
+      );
   }
 
   Future<bool> _confirmExit() async {
@@ -361,9 +434,7 @@ class _EditorScreenState extends State<EditorScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Saqlanmagan o‘zgarishlar'),
-        content: const Text(
-          'Chizma hali saqlanmadi. Chiqib ketilsinmi?',
-        ),
+        content: const Text('Chizma hali saqlanmadi. Chiqib ketilsinmi?'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -384,12 +455,16 @@ class _EditorScreenState extends State<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final built = _buildWalls();
-    final geometry = RoomGeometry.fromWalls(
-      built.walls,
-      startHeading: built.startHeading,
-    );
+    final draft = _draft();
+    final geometry = draft.geometry;
     final implied = geometry.impliedEdge;
+    final estimate = RoomEstimate(
+      floorArea: geometry.area,
+      perimeter: geometry.perimeter,
+      height: _height(),
+      reservePercent: _reservePercent,
+      openings: draft.openings,
+    );
 
     return PopScope<Object?>(
       key: const Key('editor-pop-scope'),
@@ -432,7 +507,7 @@ class _EditorScreenState extends State<EditorScreen> {
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
           children: <Widget>[
-            _PreviewCard(geometry: geometry, showAngles: _showAngles),
+            PreviewCard(geometry: geometry, showAngles: _showAngles),
             const SizedBox(height: 12),
             if (geometry.selfIntersecting)
               const Padding(
@@ -518,17 +593,33 @@ class _EditorScreenState extends State<EditorScreen> {
               title: 'Balandlik va material',
               icon: Icons.height,
               subtitle: 'Devorlar yuzasi, hajm va zaxira hisobi uchun',
-              child: _HeightSection(
+              child: HeightSection(
                 controller: _heightController,
                 reservePercent: _reservePercent,
-                estimate: RoomEstimate(
-                  floorArea: geometry.area,
-                  perimeter: geometry.perimeter,
-                  height: _height(),
-                  reservePercent: _reservePercent,
-                ),
+                estimate: estimate,
+                outOfRange: _heightOutOfRange,
                 onReserveChanged: (value) => setState(() {
                   _reservePercent = value;
+                  _dirty = true;
+                }),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SectionCard(
+              title: 'Eshik va derazalar',
+              icon: Icons.sensor_door_outlined,
+              subtitle: 'Devor yuzasi va plintus hisobidan ayriladi',
+              child: OpeningsSection(
+                drafts: _openings,
+                openings: draft.openings,
+                onAdd: _addOpening,
+                onRemove: _removeOpening,
+                onKindChanged: (index, kind) => setState(() {
+                  _openings[index].kind = kind;
+                  _dirty = true;
+                }),
+                onCountChanged: (index, count) => setState(() {
+                  _openings[index].count = count;
                   _dirty = true;
                 }),
               ),
@@ -548,7 +639,7 @@ class _EditorScreenState extends State<EditorScreen> {
             ),
           ],
         ),
-        bottomNavigationBar: _SaveBar(
+        bottomNavigationBar: SaveBar(
           saving: _saving,
           area: geometry.area,
           perimeter: geometry.perimeter,
@@ -627,7 +718,7 @@ class _EditorScreenState extends State<EditorScreen> {
               spacing: 8,
               runSpacing: 8,
               children: <Widget>[
-                for (final template in _Template.values)
+                for (final template in ShapeTemplate.values)
                   ActionChip(
                     label: Text(template.title),
                     avatar: Icon(
@@ -644,28 +735,23 @@ class _EditorScreenState extends State<EditorScreen> {
             for (var i = 0; i < _walls.length; i++)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _WallRow(
+                child: WallRow(
                   index: i,
-                  draft: _walls[i],
+                  controller: _walls[i].controller,
+                  turn: _walls[i].turn,
                   isLast: i == _walls.length - 1,
                   onTurnChanged: (value) => setState(() {
-                    _walls[i].turn = value;
+                    _walls[i].turn = TurnSelector.clamp(value);
                     _dirty = true;
                   }),
                   onRemove: () => _removeWall(i),
                 ),
               ),
             const SizedBox(height: 4),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _addWall,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Devor qo‘shish'),
-                  ),
-                ),
-              ],
+            OutlinedButton.icon(
+              onPressed: _addWall,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Devor qo‘shish'),
             ),
             const SizedBox(height: 12),
             const NoteBanner(
@@ -677,449 +763,5 @@ class _EditorScreenState extends State<EditorScreen> {
           ],
         );
     }
-  }
-}
-
-/// Balandlik va zaxira foizini kiritish bo'limi.
-class _HeightSection extends StatelessWidget {
-  const _HeightSection({
-    required this.controller,
-    required this.reservePercent,
-    required this.estimate,
-    required this.onReserveChanged,
-  });
-
-  final TextEditingController controller;
-  final double reservePercent;
-  final RoomEstimate estimate;
-  final ValueChanged<double> onReserveChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        MeasureField(
-          controller: controller,
-          label: 'Xona balandligi (ixtiyoriy)',
-          hint: '2.80',
-        ),
-        const SizedBox(height: 14),
-        const Text(
-          'Material zaxirasi',
-          style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          children: <Widget>[
-            for (final option in RoomEstimate.reserveOptions)
-              ChoiceChip(
-                label: Text(option == 0 ? "Yo'q" : '+${option.round()}%'),
-                selected: (reservePercent - option).abs() < 0.01,
-                onSelected: (_) => onReserveChanged(option),
-                selectedColor: AppColors.shapeFill,
-                backgroundColor: AppColors.surfaceHigh,
-                showCheckmark: false,
-                labelStyle: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textPrimary,
-                ),
-                side: BorderSide.none,
-              ),
-          ],
-        ),
-        if (estimate.hasHeight) ...<Widget>[
-          const SizedBox(height: 14),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: StatTile(
-                  label: 'Devorlar yuzasi',
-                  value: Fmt.area(estimate.wallArea!),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: StatTile(
-                  label: 'Hajmi',
-                  value: '${Fmt.number(estimate.volume!)} m³',
-                ),
-              ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-/// Ko'p burchakli xona uchun tayyor shablonlar.
-enum _Template {
-  rectangle(
-    "To‘rtburchak",
-    Icons.crop_square,
-    <(double, double)>[(5, 90), (4, 90), (5, 90), (4, 90)],
-  ),
-  lShape(
-    'L-shakl',
-    Icons.crop_7_5,
-    <(double, double)>[
-      (6, 90),
-      (3, 90),
-      (3, -90),
-      (3, 90),
-      (3, 90),
-      (6, 90),
-    ],
-  ),
-  uShape(
-    'U-shakl',
-    Icons.crop_16_9,
-    <(double, double)>[
-      (8, 90),
-      (6, 90),
-      (2.5, 90),
-      (3.5, -90),
-      (3, -90),
-      (3.5, 90),
-      (2.5, 90),
-      (6, 90),
-    ],
-  ),
-  empty(
-    'Bo‘sh (4 devor)',
-    Icons.grid_4x4,
-    <(double, double)>[(0, 90), (0, 90), (0, 90), (0, 90)],
-  );
-
-  const _Template(this.title, this.icon, this.walls);
-
-  final String title;
-  final IconData icon;
-  final List<(double, double)> walls;
-}
-
-class _WallRow extends StatelessWidget {
-  const _WallRow({
-    required this.index,
-    required this.draft,
-    required this.isLast,
-    required this.onTurnChanged,
-    required this.onRemove,
-  });
-
-  final int index;
-  final _WallDraft draft;
-  final bool isLast;
-  final ValueChanged<double> onTurnChanged;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: const BoxDecoration(
-            color: AppColors.shapeFill,
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            '${index + 1}',
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          flex: 4,
-          child: TextField(
-            controller: draft.controller,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(
-              fontSize: 15,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-            decoration: const InputDecoration(
-              isDense: true,
-              hintText: '0.00',
-              suffixText: 'm',
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 5,
-          child: isLast
-              ? Container(
-                  height: 44,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceHigh,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Text(
-                    'Boshiga ulanadi',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                )
-              : _TurnSelector(value: draft.turn, onChanged: onTurnChanged),
-        ),
-        IconButton(
-          tooltip: 'Devorni olib tashlash',
-          onPressed: onRemove,
-          icon: const Icon(
-            Icons.remove_circle_outline,
-            size: 19,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TurnSelector extends StatelessWidget {
-  const _TurnSelector({required this.value, required this.onChanged});
-
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  Future<void> _custom(BuildContext context) async {
-    final controller = TextEditingController(text: Fmt.number(value, digits: 1));
-    final result = await showDialog<double>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Burilish burchagi'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const Text(
-              'Musbat son — o‘ngga, manfiy son — chapga burilish.',
-              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-                signed: true,
-              ),
-              inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,\-]')),
-              ],
-              decoration: const InputDecoration(
-                labelText: 'Burchak',
-                suffixText: '°',
-              ),
-            ),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Bekor'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(
-              Fmt.parseNumber(controller.text),
-            ),
-            child: const Text('Tanlash'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (result != null) onChanged(result);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final preset = TurnPreset.match(value);
-    final label = preset == TurnPreset.custom
-        ? '${Fmt.number(value, digits: 1)}°'
-        : preset.title;
-
-    return PopupMenuButton<TurnPreset>(
-      tooltip: 'Burilish',
-      color: AppColors.surfaceHigh,
-      position: PopupMenuPosition.under,
-      onSelected: (selected) {
-        if (selected == TurnPreset.custom) {
-          _custom(context);
-        } else {
-          onChanged(selected.degrees);
-        }
-      },
-      itemBuilder: (context) => <PopupMenuEntry<TurnPreset>>[
-        for (final item in TurnPreset.values)
-          PopupMenuItem<TurnPreset>(
-            value: item,
-            child: Row(
-              children: <Widget>[
-                Icon(
-                  switch (item) {
-                    TurnPreset.rightAngleRight => Icons.turn_right,
-                    TurnPreset.rightAngleLeft => Icons.turn_left,
-                    TurnPreset.straight => Icons.straight,
-                    TurnPreset.custom => Icons.rotate_right,
-                  },
-                  size: 17,
-                  color: AppColors.shapeStroke,
-                ),
-                const SizedBox(width: 10),
-                Text(item.title),
-              ],
-            ),
-          ),
-      ],
-      child: Container(
-        height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceHigh,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: <Widget>[
-            Icon(
-              value > 0
-                  ? Icons.turn_right
-                  : value < 0
-                      ? Icons.turn_left
-                      : Icons.straight,
-              size: 17,
-              color: AppColors.shapeStroke,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            const Icon(
-              Icons.expand_more,
-              size: 16,
-              color: AppColors.textSecondary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PreviewCard extends StatelessWidget {
-  const _PreviewCard({required this.geometry, required this.showAngles});
-
-  final RoomGeometry geometry;
-  final bool showAngles;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 260,
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.outline),
-      ),
-      padding: const EdgeInsets.fromLTRB(14, 18, 14, 12),
-      child: SketchView(
-        geometry: geometry,
-        showAngles: showAngles,
-      ),
-    );
-  }
-}
-
-class _SaveBar extends StatelessWidget {
-  const _SaveBar({
-    required this.saving,
-    required this.area,
-    required this.perimeter,
-    required this.onSave,
-  });
-
-  final bool saving;
-  final double area;
-  final double perimeter;
-  final VoidCallback? onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.outline)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        12 + MediaQuery.paddingOf(context).bottom,
-      ),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  Fmt.area(area),
-                  style: const TextStyle(
-                    fontFamily: kSerif,
-                    fontSize: 22,
-                    height: 1.1,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Perimetr: ${Fmt.meters(perimeter)}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          FilledButton.icon(
-            onPressed: onSave,
-            icon: saving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save_outlined, size: 18),
-            label: Text(saving ? 'Saqlanmoqda…' : 'Saqlash'),
-          ),
-        ],
-      ),
-    );
   }
 }

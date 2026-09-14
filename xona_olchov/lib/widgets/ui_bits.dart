@@ -1,6 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
+
+/// Xabarlarni bir joydan ko'rsatish.
+extension SnackMessages on BuildContext {
+  /// Pastdagi qisqa xabar. Avvalgisi bo'lsa almashtiriladi.
+  void showSnack(String message) {
+    ScaffoldMessenger.of(this)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+/// Menyu bandi uchun belgi + matn qatori.
+class MenuRow extends StatelessWidget {
+  const MenuRow({super.key, required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Icon(icon, size: 17, color: AppColors.shapeStroke),
+        const SizedBox(width: 10),
+        Text(text),
+      ],
+    );
+  }
+}
+
+/// Karta va ro'yxatlardagi kichik belgi.
+class MiniChip extends StatelessWidget {
+  const MiniChip({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.accent = false,
+  });
+
+  final IconData icon;
+  final String text;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: accent ? AppColors.shapeFill : AppColors.surfaceHigh,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(
+            icon,
+            size: 12,
+            color: accent ? AppColors.shapeStroke : AppColors.textSecondary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Sarlavhali karta — ekranlardagi asosiy bo'lim konteyneri.
 class SectionCard extends StatelessWidget {
@@ -243,6 +317,20 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+/// Manfiy bo'lmagan o'nlik son uchun kiritish cheklovi.
+///
+/// Faqat raqamlar va bitta ajratgich ( `.` yoki `,` ) o'tadi — shu sababli
+/// "1..5" yoki "-3" kabi o'lchamlar umuman terilmaydi.
+final List<TextInputFormatter> measureInputFormatters =
+    <TextInputFormatter>[
+  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+  TextInputFormatter.withFunction((oldValue, newValue) {
+    final text = newValue.text;
+    final separators = RegExp('[.,]').allMatches(text).length;
+    return separators > 1 ? oldValue : newValue;
+  }),
+];
+
 /// O'lcham kiritish maydoni.
 class MeasureField extends StatelessWidget {
   const MeasureField({
@@ -252,7 +340,9 @@ class MeasureField extends StatelessWidget {
     this.hint,
     this.suffix = 'm',
     this.autofocus = false,
+    this.isDense = false,
     this.textInputAction = TextInputAction.next,
+    this.onChanged,
     this.onSubmitted,
   });
 
@@ -261,7 +351,9 @@ class MeasureField extends StatelessWidget {
   final String? hint;
   final String suffix;
   final bool autofocus;
+  final bool isDense;
   final TextInputAction textInputAction;
+  final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
   @override
@@ -270,14 +362,17 @@ class MeasureField extends StatelessWidget {
       controller: controller,
       autofocus: autofocus,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: measureInputFormatters,
       textInputAction: textInputAction,
+      onChanged: onChanged,
       onSubmitted: onSubmitted,
-      style: const TextStyle(
-        fontSize: 16,
+      style: TextStyle(
+        fontSize: isDense ? 15 : 16,
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w500,
       ),
       decoration: InputDecoration(
+        isDense: isDense,
         labelText: label,
         hintText: hint,
         suffixText: suffix,

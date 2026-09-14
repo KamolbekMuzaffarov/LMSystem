@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../models/opening.dart';
 import '../models/room_sketch.dart';
 import '../theme/app_theme.dart';
 import '../widgets/sketch_painter.dart';
@@ -71,9 +72,17 @@ abstract final class SketchImage {
       ('Burchaklar', '${sketch.geometry.vertices.length} ta'),
       if (estimate.hasHeight) ('Balandlik', Fmt.meters(sketch.height!)),
       if (estimate.wallArea != null)
-        ('Devorlar yuzasi', Fmt.area(estimate.wallArea!)),
-      if (estimate.volume != null)
-        ('Hajmi', '${Fmt.number(estimate.volume!)} m³'),
+        (
+          estimate.hasOpenings ? 'Devorlar yuzasi (sof)' : 'Devorlar yuzasi',
+          Fmt.area(estimate.wallArea!),
+        ),
+      if (estimate.volume != null) ('Hajmi', Fmt.volume(estimate.volume!)),
+      if (estimate.hasOpenings)
+        (
+          'Eshik / deraza',
+          '${sketch.openings.pieces} ta · ${Fmt.area(estimate.openingArea)}',
+        ),
+      ('Plintus', Fmt.meters(estimate.skirtingLength)),
     ];
     const rowHeight = 46.0;
     final footerHeight = rows.length * rowHeight + 56;
