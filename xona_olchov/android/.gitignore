@@ -1,0 +1,12 @@
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Diqqat: key.properties va hisob-release.jks ataylab repozitoriyda saqlanadi —
+# shunda har bir build bir xil imzo bilan chiqadi va ilova yangilanganda
+# saqlangan chizmalar yo‘qolmaydi. Play Store'ga chiqarishda yangi, maxfiy kalit yarating.
