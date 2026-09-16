@@ -3,7 +3,10 @@
 Xona o‘lchamlarini kiriting — ilova chizmasini chizib, **yuza** va **perimetr**ni hisoblaydi,
 chizmani nom, tavsif va lokatsiya bilan qurilma xotirasida **doimiy** saqlaydi.
 
-## Imkoniyatlar
+Ilovada ikkita bo‘lim bor: **Chizmalar** (o‘lchov va hisob) va **Potolok**
+(natyajnoy potolok xizmati — narx, ko‘rgazma va ariza).
+
+## Chizmalar bo‘limi
 
 - **Uch rejim:** to‘rtburchak, trapetsiya (namunadagi kabi) va ko‘p burchakli xona —
   devor-devor kiritiladi, burchaklar soni cheklanmagan (L-shakl, U-shakl shablonlari bor).
@@ -21,6 +24,27 @@ chizmani nom, tavsif va lokatsiya bilan qurilma xotirasida **doimiy** saqlaydi.
 - **Lokatsiya:** internet yoqiq bo‘lsa GPS ruxsati so‘raladi; Google Maps havolasi yoki
   koordinatani qo‘lda kiritish; manzil nomi (teskari geokodlash); xaritada ochish.
 - **Dizayn:** namunadagi qorong‘i mavzu (`#151515` fon, `#085041` shakl, `#56BE9B` chegara).
+
+## Potolok bo‘limi
+
+Natyajnoy potolok xizmatining mijozga ko‘rsatiladigan qismi — o‘lchov ilovasi bilan
+bitta ilovada.
+
+- **Narx kalkulyatori:** yuzani qo‘lda kiriting yoki **saqlangan chizmadan** oling
+  (shift yuzasi pol yuzasiga teng) → `120$ dan ≈ 1 512 000 so‘m`. E‘lon qilinadigan
+  narx — faqat eng past daraja: **6 $/m², hammasi ichida**. Yuqori darajalar raqam
+  bilan ko‘rsatilmaydi; aniq summa o‘lchovdan keyin, qo‘ng‘iroqda aytiladi.
+- **Shift turlari:** glyanets, mat, satin, foto-chop, ko‘p darajali, yulduzli osmon.
+  Har biri ilovaning o‘zida chiziladi — internetsiz ham darrov ochiladi.
+- **Kafolat va savol-javob:** 15 yil kafolat, 10+ yil tajriba, Buxoro va Navoiy.
+- **Ariza (internet orqali):** ism va telefon → `https://premium-potolok.vercel.app/api/lead`.
+  Ariza avval xotiraga yoziladi, keyin yuboriladi — internet yo‘q bo‘lsa navbatda qoladi
+  va ulanish tiklanganda o‘zi jo‘naydi. Server rad etsa sabab ko‘rsatiladi, zaxira yo‘l
+  sifatida matn nusxalanib Telegram bot ochiladi.
+- **Aloqa:** qo‘ng‘iroq (raqam sozlamalarda saqlanadi), Telegram kanal va bot, sayt.
+- **Arizalarim:** yuborilgan va navbatdagi arizalar tarixi, holati bilan.
+
+Telefon raqami ilovada saqlanadi (repozitoriyda emas): **Aloqa → qalam belgisi**.
 
 ## Ishga tushirish
 
@@ -52,11 +76,11 @@ Qo‘lda: `flutter build apk --release` → `build/app/outputs/flutter-apk/app-r
 
 ```
 lib/
-├── core/        geometriya (burchaklar, yuza, perimetr), formatlar, ID
-├── data/        SketchStore — faqat qo‘shish/yangilash, o‘chirish yo‘q
-├── models/      Wall, RoomSketch, GeoPoint
-├── services/    lokatsiya (GPS, geokodlash), Google Maps havola parseri
-├── screens/     ro‘yxat, tahrirlash, batafsil, ilova haqida
-├── widgets/     SketchPainter (chizma), lokatsiya tanlagich, umumiy UI
+├── core/        geometriya (burchaklar, yuza, perimetr), formatlar, ID, brend
+├── data/        SketchStore va PotolokStore — qo‘shish/yangilash, o‘chirish yo‘q
+├── models/      Wall, RoomSketch, GeoPoint, Opening, CeilingDesign, Lead
+├── services/    lokatsiya, Maps havola parseri, ariza yuborish (HTTP) va navbat
+├── screens/     root_shell (ikki bo‘lim), ro‘yxat, tahrirlash, batafsil, potolok/
+├── widgets/     SketchPainter, CeilingPreview, lokatsiya tanlagich, umumiy UI
 └── theme/       ranglar va Material 3 mavzusi
 ```

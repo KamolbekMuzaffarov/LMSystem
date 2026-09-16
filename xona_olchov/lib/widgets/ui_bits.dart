@@ -97,57 +97,62 @@ class SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.outline),
-      ),
-      padding: padding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          if (title != null) ...<Widget>[
-            Row(
-              children: <Widget>[
-                if (icon != null) ...<Widget>[
-                  Icon(icon, size: 18, color: AppColors.shapeStroke),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        title!,
-                        style: const TextStyle(
-                          fontFamily: kSerif,
-                          fontSize: 17,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      if (subtitle != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            subtitle!,
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              color: AppColors.textSecondary,
-                              height: 1.35,
-                            ),
+    // Fon Material ustida turadi — shunda ichkaridagi bosiladigan qatorlar
+    // (masalan savol-javob) o'z siyoh dog'ini ko'rsata oladi.
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.outline),
+        ),
+        padding: padding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            if (title != null) ...<Widget>[
+              Row(
+                children: <Widget>[
+                  if (icon != null) ...<Widget>[
+                    Icon(icon, size: 18, color: AppColors.shapeStroke),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          title!,
+                          style: const TextStyle(
+                            fontFamily: kSerif,
+                            fontSize: 17,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                    ],
+                        if (subtitle != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              subtitle!,
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.textSecondary,
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                ?trailing,
-              ],
-            ),
-            const SizedBox(height: 14),
+                  ?trailing,
+                ],
+              ),
+              const SizedBox(height: 14),
+            ],
+            child,
           ],
-          child,
-        ],
+        ),
       ),
     );
   }

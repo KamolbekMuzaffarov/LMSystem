@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:xona_olchov/app.dart';
 import 'package:xona_olchov/core/estimate.dart';
+import 'package:xona_olchov/data/potolok_store.dart';
 import 'package:xona_olchov/data/sketch_store.dart';
 import 'package:xona_olchov/models/opening.dart';
 import 'package:xona_olchov/screens/editor_parts.dart';
@@ -19,7 +20,10 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     final store = await SketchStore.open();
-    await tester.pumpWidget(XonaOlchovApp(store: store));
+    final potolok = await PotolokStore.open();
+    await tester.pumpWidget(
+      XonaOlchovApp(store: store, potolok: potolok),
+    );
     await tester.pumpAndSettle();
     return store;
   }

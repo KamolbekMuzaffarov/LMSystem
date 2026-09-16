@@ -18,6 +18,10 @@ abstract final class AppColors {
   static const Color textPrimary = Color(0xFFF9F9F7);
   static const Color textSecondary = Color(0xFF97958D);
   static const Color accent = Color(0xFFD97757);
+
+  /// Potolok bo'limining «premium» urg'usi.
+  static const Color gold = Color(0xFFD6A85C);
+  static const Color goldSoft = Color(0xFFF0D8A8);
   static const Color danger = Color(0xFFE2725B);
 }
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'app.dart';
 import 'core/app_info.dart';
+import 'data/potolok_store.dart';
 import 'data/sketch_store.dart';
 import 'theme/app_theme.dart';
 
@@ -20,28 +21,40 @@ class Bootstrap extends StatefulWidget {
   State<Bootstrap> createState() => _BootstrapState();
 }
 
+/// Ilova ishga tushishi uchun kerak bo'lgan omborlar.
+typedef AppStores = ({SketchStore sketches, PotolokStore potolok});
+
+Future<AppStores> openStores() async {
+  final sketches = await SketchStore.open();
+  final potolok = await PotolokStore.open();
+  return (sketches: sketches, potolok: potolok);
+}
+
 class _BootstrapState extends State<Bootstrap> {
-  late Future<SketchStore> _future = SketchStore.open();
+  late Future<AppStores> _future = openStores();
 
   /// Xotira ochilmasa foydalanuvchi qayta urinib ko'radi.
-  void _retry() => setState(() => _future = SketchStore.open());
+  void _retry() => setState(() => _future = openStores());
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<SketchStore>(
+    return FutureBuilder<AppStores>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const _SplashApp();
         }
-        final store = snapshot.data;
-        if (store == null) {
+        final stores = snapshot.data;
+        if (stores == null) {
           return _SplashApp(
             error: '${snapshot.error ?? "Noma‘lum xato"}',
             onRetry: _retry,
           );
         }
-        return XonaOlchovApp(store: store);
+        return XonaOlchovApp(
+          store: stores.sketches,
+          potolok: stores.potolok,
+        );
       },
     );
   }
