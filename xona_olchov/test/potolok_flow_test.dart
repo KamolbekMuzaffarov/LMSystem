@@ -12,6 +12,7 @@ import 'package:xona_olchov/data/sketch_store.dart';
 import 'package:xona_olchov/models/ceiling.dart';
 import 'package:xona_olchov/models/lead.dart';
 import 'package:xona_olchov/models/room_sketch.dart';
+import 'package:xona_olchov/screens/potolok/potolok_parts.dart';
 import 'package:xona_olchov/screens/potolok/potolok_screen.dart';
 import 'package:xona_olchov/services/lead_sender.dart';
 import 'package:xona_olchov/services/lead_service.dart';
@@ -224,6 +225,10 @@ void main() {
     await tester.tap(find.text('Bepul o‘lchovga yozilish'));
     await tester.pumpAndSettle();
     await fillForm(tester, phone: '+998939856102');
+
+    // Yetkazilmagan ariza «qabul qilindi» deb aytilmaydi.
+    expect(find.text('Ariza saqlandi'), findsOneWidget);
+    expect(find.text('Ariza qabul qilindi'), findsNothing);
     await tester.tap(find.text('Yopish'));
     await tester.pumpAndSettle();
 
@@ -272,6 +277,18 @@ void main() {
 
     expect(store.contactPhone, '+998939856102');
     expect(find.text('+998 93 985 61 02'), findsOneWidget);
+  });
+
+  testWidgets('juda katta yuza ogohlantiradi, narx bermaydi', (tester) async {
+    await pumpSection(tester);
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Xona yuzasi'),
+      '99999',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('10000 m² dan kichik'), findsOneWidget);
+    expect(find.byType(QuoteBox), findsNothing, reason: 'narx berilmasin');
   });
 
   testWidgets('savol-javob ochiladi', (tester) async {

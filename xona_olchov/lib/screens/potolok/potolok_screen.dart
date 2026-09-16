@@ -7,6 +7,7 @@ import '../../models/ceiling.dart';
 import '../../models/lead.dart';
 import '../../services/contact_links.dart';
 import '../../services/lead_sender.dart';
+import '../../services/lead_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui_bits.dart';
 import 'lead_form_sheet.dart';
@@ -58,6 +59,10 @@ class _PotolokScreenState extends State<PotolokScreen> {
 
   double? get _areaValue => CeilingPrice.validArea(Fmt.parseNumber(_area.text));
 
+  /// Son kiritilgan, lekin hisobga kirmaydi (0 yoki juda katta).
+  bool get _areaOutOfRange =>
+      Fmt.parseNumber(_area.text) != null && _areaValue == null;
+
   CeilingQuote get _quote => CeilingQuote(
         area: _areaValue ?? 0,
         somPerUsd: PotolokScope.of(context).somPerUsd,
@@ -86,28 +91,39 @@ class _PotolokScreenState extends State<PotolokScreen> {
   }
 
   Future<void> _order() async {
-    final sent = await LeadFormSheet.show(
+    final result = await LeadFormSheet.show(
       context,
       sender: sender,
       area: _areaValue,
       design: _design,
       address: _address,
     );
-    if (!sent || !mounted) return;
-    await _thanks();
+    if (result == null || !mounted) return;
+    await _thanks(result);
   }
 
-  Future<void> _thanks() async {
+  /// Natijaga qarab javob beradi — navbatda qolgan arizani «yetkazildi»
+  /// deb aytmaydi.
+  Future<void> _thanks(SendResult result) async {
     final phone = PotolokScope.read(context).contactPhone;
+    final queued = !result.isSent;
     await showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        icon: const Icon(Icons.check_circle, color: AppColors.gold, size: 34),
-        title: const Text('Ariza qabul qilindi'),
-        content: const Text(
-          'Tez orada qo‘ng‘iroq qilamiz. Shoshilinch bo‘lsa — '
-          'o‘zingiz qo‘ng‘iroq qiling, darrov javob beramiz.',
-          style: TextStyle(height: 1.45),
+        icon: Icon(
+          queued ? Icons.cloud_off : Icons.check_circle,
+          color: queued ? AppColors.accent : AppColors.gold,
+          size: 34,
+        ),
+        title: Text(queued ? 'Ariza saqlandi' : 'Ariza qabul qilindi'),
+        content: Text(
+          queued
+              ? 'Internet yo‘q — ariza telefoningizda saqlandi va ulanish '
+                  'tiklanganda o‘zi jo‘naydi. Shoshilinch bo‘lsa qo‘ng‘iroq '
+                  'qiling.'
+              : 'Tez orada qo‘ng‘iroq qilamiz. Shoshilinch bo‘lsa — '
+                  'o‘zingiz qo‘ng‘iroq qiling, darrov javob beramiz.',
+          style: const TextStyle(height: 1.45),
         ),
         actions: <Widget>[
           TextButton(
@@ -212,6 +228,7 @@ class _PotolokScreenState extends State<PotolokScreen> {
           _Calculator(
             controller: _area,
             quote: _quote,
+            outOfRange: _areaOutOfRange,
             onChanged: () => setState(() {}),
             onPickSketch: _pickSketch,
             onOrder: _order,
@@ -264,6 +281,7 @@ class _Calculator extends StatelessWidget {
   const _Calculator({
     required this.controller,
     required this.quote,
+    required this.outOfRange,
     required this.onChanged,
     required this.onPickSketch,
     required this.onOrder,
@@ -271,6 +289,9 @@ class _Calculator extends StatelessWidget {
 
   final TextEditingController controller;
   final CeilingQuote quote;
+
+  /// Kiritilgan son hisobga kirmaydi.
+  final bool outOfRange;
   final VoidCallback onChanged;
   final VoidCallback onPickSketch;
   final VoidCallback onOrder;
@@ -311,7 +332,15 @@ class _Calculator extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          QuoteBox(quote: quote),
+          if (outOfRange)
+            NoteBanner(
+              tone: NoteTone.warning,
+              icon: Icons.warning_amber_outlined,
+              text: 'Yuza 0 dan katta va ${CeilingPrice.maxArea.round()} m² '
+                  'dan kichik bo‘lishi kerak.',
+            )
+          else
+            QuoteBox(quote: quote),
           const SizedBox(height: 14),
           GoldButton(
             label: 'Bepul o‘lchovga yozilish',

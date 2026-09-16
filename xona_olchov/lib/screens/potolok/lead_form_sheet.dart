@@ -26,15 +26,15 @@ class LeadFormSheet extends StatefulWidget {
   final CeilingDesign? design;
   final String? address;
 
-  /// Oynani ochadi. Ariza yuborilgan bo'lsa `true` qaytadi.
-  static Future<bool> show(
+  /// Oynani ochadi. Bekor qilinsa `null`, aks holda yuborish natijasi.
+  static Future<SendResult?> show(
     BuildContext context, {
     required LeadSender sender,
     double? area,
     CeilingDesign? design,
     String? address,
-  }) async {
-    final sent = await showModalBottomSheet<bool>(
+  }) {
+    return showModalBottomSheet<SendResult>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -45,7 +45,6 @@ class LeadFormSheet extends StatefulWidget {
         address: address,
       ),
     );
-    return sent ?? false;
   }
 
   @override
@@ -101,7 +100,7 @@ class _LeadFormSheetState extends State<LeadFormSheet> {
       context.showSnack(result.userMessage);
       return;
     }
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop(result);
   }
 
   @override
