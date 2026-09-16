@@ -148,6 +148,15 @@ src/
 
 ---
 
+## Mobil ilova — Hisob (Flutter)
+
+`xona_olchov/` papkasida alohida Flutter ilovasi bor: xona o‘lchamlarini kiritasiz — ilova
+chizmasini chizib, yuzasini hisoblaydi va chizmani lokatsiya bilan doimiy saqlaydi.
+Batafsil: [`xona_olchov/README.md`](xona_olchov/README.md).
+Release APK har bir push’da GitHub Actions orqali yig‘ilib, **Releases** bo‘limiga qo‘yiladi.
+
+---
+
 ## Xavfsizlik eslatmalari
 
 - `.env` fayllari `.gitignore`'da — hech qachon repozitoriyga qo'shilmaydi.
