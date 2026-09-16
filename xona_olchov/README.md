@@ -46,6 +46,26 @@ bitta ilovada.
 
 Telefon raqami ilovada saqlanadi (repozitoriyda emas): **Aloqa → qalam belgisi**.
 
+### AI yordamchi (Claude API)
+
+Potolok bo‘limida **AI yordamchi** — mijozning savollariga (narx, kafolat,
+turlari, o‘rnatish) o‘zbekcha javob beradigan suhbat. App bar’dagi yordamchi
+belgisi yoki «AI yordamchi» kartasi orqali ochiladi.
+
+Ilova Claude API’ga **to‘g‘ridan-to‘g‘ri murojaat qilmaydi**. Agar API kaliti
+ilovaga qo‘yilsa, uni APK ichidan chiqarib olish mumkin bo‘lardi. Shuning uchun:
+
+```
+Ilova ──POST /api/chat──▶ Vercel funksiyasi ──▶ Claude API
+                          (ANTHROPIC_API_KEY shu yerda)
+```
+
+Kalit **faqat Vercel env**’da turadi — ilovada ham, bu repozitoriyda ham yo‘q.
+Server funksiyasi va uni ulash yo‘riqnomasi `potolok-backend/` papkasida
+(`api/chat.js` + `README.md`). Kalitni Chrome’da
+<https://console.anthropic.com> → Settings → API Keys’dan olib, Vercel env’ga
+qo‘yasiz; `$5` kreditni cho‘zish uchun `ANTHROPIC_MODEL=claude-haiku-4-5`.
+
 ## Ishga tushirish
 
 ```bash
@@ -79,7 +99,7 @@ lib/
 ├── core/        geometriya (burchaklar, yuza, perimetr), formatlar, ID, brend
 ├── data/        SketchStore va PotolokStore — qo‘shish/yangilash, o‘chirish yo‘q
 ├── models/      Wall, RoomSketch, GeoPoint, Opening, CeilingDesign, Lead
-├── services/    lokatsiya, Maps havola parseri, ariza yuborish (HTTP) va navbat
+├── services/    lokatsiya, Maps parseri, ariza (HTTP) va navbat, AI yordamchi
 ├── screens/     root_shell (ikki bo‘lim), ro‘yxat, tahrirlash, batafsil, potolok/
 ├── widgets/     SketchPainter, CeilingPreview, lokatsiya tanlagich, umumiy UI
 └── theme/       ranglar va Material 3 mavzusi

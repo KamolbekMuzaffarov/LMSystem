@@ -326,8 +326,7 @@ class EmptyState extends StatelessWidget {
 ///
 /// Faqat raqamlar va bitta ajratgich ( `.` yoki `,` ) o'tadi — shu sababli
 /// "1..5" yoki "-3" kabi o'lchamlar umuman terilmaydi.
-final List<TextInputFormatter> measureInputFormatters =
-    <TextInputFormatter>[
+final List<TextInputFormatter> measureInputFormatters = <TextInputFormatter>[
   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
   TextInputFormatter.withFunction((oldValue, newValue) {
     final text = newValue.text;

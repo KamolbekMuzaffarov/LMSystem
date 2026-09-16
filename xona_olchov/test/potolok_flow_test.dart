@@ -78,10 +78,7 @@ void main() {
   }
 
   Future<void> fillForm(WidgetTester tester, {required String phone}) async {
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Ismingiz'),
-      'Kamol',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Ismingiz'), 'Kamol');
     await tester.enterText(
       find.widgetWithText(TextField, 'Telefon raqamingiz'),
       phone,
@@ -98,9 +95,7 @@ void main() {
 
     final store = await SketchStore.open();
     final potolok = await PotolokStore.open();
-    await tester.pumpWidget(
-      XonaOlchovApp(store: store, potolok: potolok),
-    );
+    await tester.pumpWidget(XonaOlchovApp(store: store, potolok: potolok));
     await tester.pumpAndSettle();
 
     // Avval chizmalar bo'limi.
@@ -125,10 +120,7 @@ void main() {
 
     expect(find.textContaining('Xona yuzasini kiriting'), findsOneWidget);
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Xona yuzasi'),
-      '20',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Xona yuzasi'), '20');
     await tester.pumpAndSettle();
 
     expect(find.text('120\$ dan'), findsOneWidget);
@@ -138,10 +130,7 @@ void main() {
 
   testWidgets('narx faqat eng past darajada ko‘rsatiladi', (tester) async {
     await pumpSection(tester);
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Xona yuzasi'),
-      '20',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Xona yuzasi'), '20');
     await tester.pumpAndSettle();
 
     // Premium narx (10$/m² va undan yuqorisi) hech qayerda chiqmasin.
@@ -150,10 +139,7 @@ void main() {
     }
     // Har bir yo'l qo'ng'iroqqa olib boradi, aniq summa esa o'lchovdan keyin.
     expect(find.text('Qo‘ng‘iroq qilish'), findsOneWidget);
-    expect(
-      find.textContaining('Aniq summa o‘lchovdan keyin'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Aniq summa o‘lchovdan keyin'), findsOneWidget);
   });
 
   testWidgets('saqlangan chizmadan yuza olinadi', (tester) async {
@@ -169,8 +155,7 @@ void main() {
     expect(find.text('120\$ dan'), findsOneWidget);
   });
 
-  testWidgets('chizma yo‘q bo‘lsa tanlash oynasi tushuntiradi',
-      (tester) async {
+  testWidgets('chizma yo‘q bo‘lsa tanlash oynasi tushuntiradi', (tester) async {
     await pumpSection(tester);
     await tester.tap(find.text('Chizmadan'));
     await tester.pumpAndSettle();
@@ -180,10 +165,7 @@ void main() {
   testWidgets('ariza yuboriladi va tarixda qoladi', (tester) async {
     final store = await pumpSection(tester);
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Xona yuzasi'),
-      '20',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Xona yuzasi'), '20');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Glyanets'));
     await tester.pumpAndSettle();
@@ -233,10 +215,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(store.pendingCount, 1);
-    expect(
-      find.textContaining('1 ta ariza hali yuborilmagan'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('1 ta ariza hali yuborilmagan'), findsOneWidget);
   });
 
   testWidgets('arizalar ekranida holat ko‘rinadi', (tester) async {

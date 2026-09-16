@@ -132,10 +132,7 @@ void main() {
   test('chizmalar ro‘yxati o‘zgartirib bo‘lmaydigan', () async {
     final store = await SketchStore.open();
     await store.add(buildSketch('d1'));
-    expect(
-      () => store.sketches.add(buildSketch('d2')),
-      throwsUnsupportedError,
-    );
+    expect(() => store.sketches.add(buildSketch('d2')), throwsUnsupportedError);
   });
 
   test('JSON aylanishi barcha maydonlarni saqlaydi', () {

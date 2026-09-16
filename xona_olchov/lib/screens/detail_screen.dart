@@ -82,8 +82,9 @@ class _DetailScreenState extends State<DetailScreen> {
             onPressed: () => setState(() => _showAngles = !_showAngles),
             icon: Icon(
               _showAngles ? Icons.architecture : Icons.architecture_outlined,
-              color:
-                  _showAngles ? AppColors.shapeStroke : AppColors.textSecondary,
+              color: _showAngles
+                  ? AppColors.shapeStroke
+                  : AppColors.textSecondary,
             ),
           ),
           IconButton(
@@ -229,7 +230,8 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           const SizedBox(height: 14),
           const NoteBanner(
-            text: 'Bu chizma xotirada doimiy saqlanadi va o‘chirilmaydi. '
+            text:
+                'Bu chizma xotirada doimiy saqlanadi va o‘chirilmaydi. '
                 'Kerak bo‘lsa faqat tahrirlash mumkin.',
             icon: Icons.lock_outline,
           ),
@@ -252,10 +254,8 @@ class _SketchStage extends StatelessWidget {
         PageRouteBuilder<void>(
           opaque: false,
           barrierColor: AppColors.background,
-          pageBuilder: (_, _, _) => _FullscreenSketch(
-            sketch: sketch,
-            showAngles: showAngles,
-          ),
+          pageBuilder: (_, _, _) =>
+              _FullscreenSketch(sketch: sketch, showAngles: showAngles),
           transitionsBuilder: (_, animation, _, child) =>
               FadeTransition(opacity: animation, child: child),
         ),
@@ -410,7 +410,8 @@ class _OpeningsCard extends StatelessWidget {
     return SectionCard(
       title: 'Eshik va derazalar',
       icon: Icons.sensor_door_outlined,
-      subtitle: '${openings.pieces} ta · ${Fmt.area(openings.totalArea)} '
+      subtitle:
+          '${openings.pieces} ta · ${Fmt.area(openings.totalArea)} '
           'devor yuzasidan ayrildi',
       child: Column(
         children: <Widget>[

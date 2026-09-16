@@ -105,7 +105,10 @@ void main() {
     test('fayl nomlari sanaga bog‘langan', () {
       final date = DateTime(2026, 9, 14);
       expect(BackupService.csvFileName(date), 'hisob-jadval-2026-09-14.csv');
-      expect(BackupService.backupFileName(date), 'hisob-zaxira-2026-09-14.json');
+      expect(
+        BackupService.backupFileName(date),
+        'hisob-zaxira-2026-09-14.json',
+      );
     });
   });
 

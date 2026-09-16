@@ -18,12 +18,7 @@ class SpyCanvas implements Canvas {
   @override
   void drawParagraph(ui.Paragraph paragraph, Offset offset) {
     texts.add(
-      Rect.fromLTWH(
-        offset.dx,
-        offset.dy,
-        paragraph.width,
-        paragraph.height,
-      ),
+      Rect.fromLTWH(offset.dx, offset.dy, paragraph.width, paragraph.height),
     );
   }
 
@@ -57,21 +52,27 @@ SpyCanvas render(RoomGeometry geometry, Size size, {bool angles = false}) {
 void main() {
   RoomGeometry rectangle() {
     final built = ShapePresets.rectangle(length: 5, width: 4);
-    return RoomGeometry.fromWalls(built.walls, startHeading: built.startHeading);
+    return RoomGeometry.fromWalls(
+      built.walls,
+      startHeading: built.startHeading,
+    );
   }
 
   RoomGeometry lShape() => RoomGeometry.fromWalls(const <Wall>[
-        Wall(length: 6, turn: 90),
-        Wall(length: 3, turn: 90),
-        Wall(length: 3, turn: -90),
-        Wall(length: 3, turn: 90),
-        Wall(length: 3, turn: 90),
-        Wall(length: 6, turn: 90),
-      ]);
+    Wall(length: 6, turn: 90),
+    Wall(length: 3, turn: 90),
+    Wall(length: 3, turn: -90),
+    Wall(length: 3, turn: 90),
+    Wall(length: 3, turn: 90),
+    Wall(length: 6, turn: 90),
+  ]);
 
   RoomGeometry trapezoid() {
     final built = ShapePresets.trapezoid(span: 17.38, sideA: 2.96, sideB: 3.17);
-    return RoomGeometry.fromWalls(built.walls, startHeading: built.startHeading);
+    return RoomGeometry.fromWalls(
+      built.walls,
+      startHeading: built.startHeading,
+    );
   }
 
   group('Umumiy o‘lcham takrorlanmaydi', () {
@@ -98,14 +99,21 @@ void main() {
 
     test('strelka o‘chirilganda barcha devorlar yoziladi', () {
       final spy = SpyCanvas();
-      SketchPainter(geometry: rectangle(), showSpan: false, showArea: false)
-          .paint(spy, const Size(330, 230));
+      SketchPainter(
+        geometry: rectangle(),
+        showSpan: false,
+        showArea: false,
+      ).paint(spy, const Size(330, 230));
       expect(spy.texts.length, 4);
     });
   });
 
   group('Yozuvlar ustma-ust tushmaydi', () {
-    void expectNoOverlap(RoomGeometry geometry, Size size, {bool angles = false}) {
+    void expectNoOverlap(
+      RoomGeometry geometry,
+      Size size, {
+      bool angles = false,
+    }) {
       final spy = render(geometry, size, angles: angles);
       for (var i = 0; i < spy.texts.length; i++) {
         for (var j = i + 1; j < spy.texts.length; j++) {
@@ -155,16 +163,26 @@ void main() {
 
   group('Hech narsa chetdan chiqib ketmaydi', () {
     test('barcha yozuvlar maydon ichida', () {
-      for (final geometry in <RoomGeometry>[rectangle(), lShape(), trapezoid()]) {
+      for (final geometry in <RoomGeometry>[
+        rectangle(),
+        lShape(),
+        trapezoid(),
+      ]) {
         for (final size in _sizes) {
           final spy = render(geometry, size);
           for (final text in spy.texts) {
             expect(text.top, greaterThanOrEqualTo(-0.5), reason: '$size');
-            expect(text.bottom, lessThanOrEqualTo(size.height + 0.5),
-                reason: '$size');
+            expect(
+              text.bottom,
+              lessThanOrEqualTo(size.height + 0.5),
+              reason: '$size',
+            );
             expect(text.left, greaterThanOrEqualTo(-0.5), reason: '$size');
-            expect(text.right, lessThanOrEqualTo(size.width + 0.5),
-                reason: '$size');
+            expect(
+              text.right,
+              lessThanOrEqualTo(size.width + 0.5),
+              reason: '$size',
+            );
           }
         }
       }
@@ -175,8 +193,10 @@ void main() {
     test('L-shaklning 270° burchagi kesilgan joyga tushmaydi', () {
       final geometry = lShape();
       // Kesilgan burchak (3, 3) da, ichki burchak 270°.
-      final index = List<int>.generate(geometry.vertices.length, (i) => i)
-          .firstWhere((i) => (geometry.interiorAngleAt(i) - 270).abs() < 0.01);
+      final index = List<int>.generate(
+        geometry.vertices.length,
+        (i) => i,
+      ).firstWhere((i) => (geometry.interiorAngleAt(i) - 270).abs() < 0.01);
       final vertex = geometry.vertices[index];
       expect(vertex.dx, closeTo(3, 0.001));
       expect(vertex.dy, closeTo(3, 0.001));

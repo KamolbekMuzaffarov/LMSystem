@@ -17,7 +17,7 @@ import 'editor_parts.dart';
 /// Bitta devor qatorining tahrirlash holati.
 class _WallDraft {
   _WallDraft({String text = '', this.turn = 90})
-      : controller = TextEditingController(text: text);
+    : controller = TextEditingController(text: text);
 
   final TextEditingController controller;
   double turn;
@@ -97,8 +97,9 @@ class _EditorScreenState extends State<EditorScreen> {
     _kind = initial?.kind ?? RoomKind.trapezoid;
     _location = initial?.location;
     _nameController = TextEditingController(text: initial?.name ?? '');
-    _descriptionController =
-        TextEditingController(text: initial?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: initial?.description ?? '',
+    );
 
     final inputs = initial?.presetInputs ?? const <String, double>{};
     _lengthController = _numberController(inputs['length']);
@@ -121,7 +122,8 @@ class _EditorScreenState extends State<EditorScreen> {
     }
 
     // Burilish saqlangan holatdan tiklanadi (tayyor shakllar uchun ham).
-    _rotation = inputs['rotation'] ??
+    _rotation =
+        inputs['rotation'] ??
         (initial != null && initial.kind == RoomKind.polygon
             ? initial.startHeading
             : 0);
@@ -167,9 +169,7 @@ class _EditorScreenState extends State<EditorScreen> {
   }
 
   TextEditingController _numberController(double? value) {
-    return TextEditingController(
-      text: value == null ? '' : Fmt.number(value),
-    );
+    return TextEditingController(text: value == null ? '' : Fmt.number(value));
   }
 
   void _onControllerChanged(TextEditingController controller) {
@@ -229,7 +229,10 @@ class _EditorScreenState extends State<EditorScreen> {
         final width = _value(_widthController);
         if (length <= 0 || width <= 0) return none;
         final built = ShapePresets.rectangle(length: length, width: width);
-        return (walls: built.walls, startHeading: built.startHeading + _rotation);
+        return (
+          walls: built.walls,
+          startHeading: built.startHeading + _rotation,
+        );
 
       case RoomKind.trapezoid:
         final span = _value(_spanController);
@@ -241,13 +244,17 @@ class _EditorScreenState extends State<EditorScreen> {
           sideA: sideA,
           sideB: sideB,
         );
-        return (walls: built.walls, startHeading: built.startHeading + _rotation);
+        return (
+          walls: built.walls,
+          startHeading: built.startHeading + _rotation,
+        );
 
       case RoomKind.polygon:
         return (
           walls: <Wall>[
             for (final draft in _walls)
-              if (draft.length > 0) Wall(length: draft.length, turn: draft.turn),
+              if (draft.length > 0)
+                Wall(length: draft.length, turn: draft.turn),
           ],
           startHeading: _rotation,
         );
@@ -265,16 +272,16 @@ class _EditorScreenState extends State<EditorScreen> {
   Map<String, double> _presetInputs() {
     return switch (_kind) {
       RoomKind.rectangle => <String, double>{
-          'length': _value(_lengthController),
-          'width': _value(_widthController),
-          'rotation': _rotation,
-        },
+        'length': _value(_lengthController),
+        'width': _value(_widthController),
+        'rotation': _rotation,
+      },
       RoomKind.trapezoid => <String, double>{
-          'span': _value(_spanController),
-          'sideA': _value(_sideAController),
-          'sideB': _value(_sideBController),
-          'rotation': _rotation,
-        },
+        'span': _value(_spanController),
+        'sideA': _value(_sideAController),
+        'sideB': _value(_sideBController),
+        'rotation': _rotation,
+      },
       RoomKind.polygon => <String, double>{'rotation': _rotation},
     };
   }
@@ -513,7 +520,8 @@ class _EditorScreenState extends State<EditorScreen> {
               const Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: NoteBanner(
-                  text: 'Devorlar bir-birini kesib o‘tmoqda. Burilish '
+                  text:
+                      'Devorlar bir-birini kesib o‘tmoqda. Burilish '
                       'yo‘nalishlarini tekshiring — yuza noto‘g‘ri chiqadi.',
                   tone: NoteTone.danger,
                   icon: Icons.warning_amber_rounded,
@@ -523,7 +531,8 @@ class _EditorScreenState extends State<EditorScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: NoteBanner(
-                  text: 'Xona yopilishi uchun oxirgi devor avtomatik '
+                  text:
+                      'Xona yopilishi uchun oxirgi devor avtomatik '
                       'qo‘shildi: ${Fmt.meters(implied.length)} '
                       '(chizmada uzuq chiziq).',
                   tone: NoteTone.warning,
@@ -755,7 +764,8 @@ class _EditorScreenState extends State<EditorScreen> {
             ),
             const SizedBox(height: 12),
             const NoteBanner(
-              text: 'Har bir devor uzunligini yozing va undan keyin qaysi '
+              text:
+                  'Har bir devor uzunligini yozing va undan keyin qaysi '
                   'tomonga burilishini tanlang. Oxirgi devor boshlang‘ich '
                   'nuqtaga avtomatik ulanadi.',
               icon: Icons.tips_and_updates_outlined,

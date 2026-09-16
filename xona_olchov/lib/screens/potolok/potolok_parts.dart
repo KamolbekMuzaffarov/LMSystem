@@ -74,7 +74,11 @@ class GoldButton extends StatelessWidget {
 
 /// Bo'lim boshi: nom, shior va asosiy dalillar.
 class PotolokHero extends StatelessWidget {
-  const PotolokHero({super.key, required this.onCall, required this.onTelegram});
+  const PotolokHero({
+    super.key,
+    required this.onCall,
+    required this.onTelegram,
+  });
 
   final VoidCallback onCall;
   final VoidCallback onTelegram;
@@ -125,7 +129,10 @@ class PotolokHero extends StatelessWidget {
             runSpacing: 8,
             children: <Widget>[
               _Fact(icon: Icons.verified_outlined, text: '15 yil kafolat'),
-              _Fact(icon: Icons.workspace_premium_outlined, text: '10+ yil tajriba'),
+              _Fact(
+                icon: Icons.workspace_premium_outlined,
+                text: '10+ yil tajriba',
+              ),
               _Fact(icon: Icons.place_outlined, text: 'Buxoro · Navoiy'),
               _Fact(icon: Icons.bolt_outlined, text: '1 kunda o‘rnatish'),
             ],
@@ -197,7 +204,8 @@ class QuoteBox extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!quote.isValid) {
       return const NoteBanner(
-        text: 'Xona yuzasini kiriting yoki saqlangan chizmadan tanlang — '
+        text:
+            'Xona yuzasini kiriting yoki saqlangan chizmadan tanlang — '
             'narx shu zahoti chiqadi.',
         icon: Icons.calculate_outlined,
       );
@@ -276,8 +284,7 @@ class DesignGallery extends StatelessWidget {
         builder: (context, constraints) {
           final columns = constraints.maxWidth >= 520 ? 3 : 2;
           const gap = 10.0;
-          final width =
-              (constraints.maxWidth - gap * (columns - 1)) / columns;
+          final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
           return Wrap(
             spacing: gap,
             runSpacing: gap,
@@ -379,8 +386,8 @@ class _DesignCard extends StatelessWidget {
 class WhyUsCard extends StatelessWidget {
   const WhyUsCard({super.key});
 
-  static const List<(IconData, String, String)> points =
-      <(IconData, String, String)>[
+  static const List<(IconData, String, String)>
+  points = <(IconData, String, String)>[
     (
       Icons.verified_outlined,
       '15 yillik yozma kafolat',

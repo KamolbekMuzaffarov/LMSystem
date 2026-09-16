@@ -169,9 +169,8 @@ void main() {
         isTrue,
       );
       expect(
-        RoomGeometry.fromWalls(
-          const <Wall>[Wall(length: double.nan, turn: 90)],
-        ).isEmpty,
+        RoomGeometry.fromWalls(const <Wall>[Wall(length: double.nan, turn: 90)])
+            .isEmpty,
         isTrue,
       );
     });
@@ -205,7 +204,11 @@ void main() {
         Wall(length: 5, turn: 127),
       ];
       final geometry = RoomGeometry.fromWalls(walls);
-      expect(geometry.vertices.length, 3, reason: 'soxta devor qo\u2018shilmasin');
+      expect(
+        geometry.vertices.length,
+        3,
+        reason: 'soxta devor qo\u2018shilmasin',
+      );
       expect(geometry.isClosed, isTrue);
       expect(geometry.impliedEdge, isNull);
       expect(geometry.area, closeTo(6, 0.02));

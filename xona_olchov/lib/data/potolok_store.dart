@@ -12,7 +12,7 @@ import '../models/lead.dart';
 /// tarixda qoladi.
 class PotolokStore extends ChangeNotifier {
   PotolokStore._(this._prefs, List<Lead> initial, this._settings)
-      : _leads = List<Lead>.of(initial) {
+    : _leads = List<Lead>.of(initial) {
     _sort();
   }
 

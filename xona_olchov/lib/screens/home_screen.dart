@@ -66,8 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
       case SortMode.name:
         filtered.sort(
           (a, b) => a.displayName.toLowerCase().compareTo(
-                b.displayName.toLowerCase(),
-              ),
+            b.displayName.toLowerCase(),
+          ),
         );
     }
     return filtered;
@@ -101,9 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openEditor([RoomSketch? sketch]) async {
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => EditorScreen(initial: sketch),
-      ),
+      MaterialPageRoute<void>(builder: (_) => EditorScreen(initial: sketch)),
     );
   }
 
@@ -126,10 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onSelected: (value) => setState(() => _sort = value),
             itemBuilder: (context) => <PopupMenuEntry<SortMode>>[
               for (final mode in SortMode.values)
-                PopupMenuItem<SortMode>(
-                  value: mode,
-                  child: Text(mode.title),
-                ),
+                PopupMenuItem<SortMode>(value: mode, child: Text(mode.title)),
             ],
           ),
           PopupMenuButton<MenuAction>(
@@ -218,33 +213,31 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     )
                   : items.isEmpty
-                      ? const EmptyState(
-                          icon: Icons.search_off,
-                          title: 'Topilmadi',
-                          message:
-                              'Qidiruvga mos chizma yo‘q. Boshqa so‘z bilan '
-                              'urinib ko‘ring.',
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                          itemCount: items.length,
-                          scrollCacheExtent: const ScrollCacheExtent.pixels(600),
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final sketch = items[index];
-                            return SketchCard(
-                              key: ValueKey<String>(sketch.id),
-                              sketch: sketch,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) =>
-                                      DetailScreen(sketchId: sketch.id),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                  ? const EmptyState(
+                      icon: Icons.search_off,
+                      title: 'Topilmadi',
+                      message:
+                          'Qidiruvga mos chizma yo‘q. Boshqa so‘z bilan '
+                          'urinib ko‘ring.',
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
+                      itemCount: items.length,
+                      scrollCacheExtent: const ScrollCacheExtent.pixels(600),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final sketch = items[index];
+                        return SketchCard(
+                          key: ValueKey<String>(sketch.id),
+                          sketch: sketch,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => DetailScreen(sketchId: sketch.id),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -266,10 +259,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Expanded(
-            child: StatTile(
-              label: 'Chizmalar',
-              value: '$count ta',
-            ),
+            child: StatTile(label: 'Chizmalar', value: '$count ta'),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -373,7 +363,7 @@ class SketchCard extends StatelessWidget {
                           child: Text(
                             sketch.hasLocation
                                 ? (sketch.location!.address ??
-                                    sketch.location!.coordinatesText)
+                                      sketch.location!.coordinatesText)
                                 : Fmt.relative(sketch.updatedAt),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../core/formatters.dart';
@@ -30,7 +31,8 @@ class _EdgeLabel {
 
   Rect rectFor(Offset pixelAnchor) {
     final size = painter.size;
-    final center = pixelAnchor +
+    final center =
+        pixelAnchor +
         Offset(
           normal.dx * (gap + size.width / 2),
           normal.dy * (gap + size.height / 2),
@@ -126,8 +128,9 @@ class SketchPainter extends CustomPainter {
     final height = math.max(bounds.height, 0.001);
 
     // Strelka va yuza yozuvi uchun ajratilgan doimiy (piksel) bo'shliqlar.
-    final spanBand =
-        spanPainter == null ? 0.0 : spanPainter.height + _spanGap + 4;
+    final spanBand = spanPainter == null
+        ? 0.0
+        : spanPainter.height + _spanGap + 4;
     final areaBand = areaPainter == null ? 0.0 : areaPainter.height + _areaGap;
     const edgePad = 6.0;
 
@@ -162,10 +165,10 @@ class SketchPainter extends CustomPainter {
         math.max(spanPainter?.width ?? 0, areaPainter?.width ?? 0),
       );
       final totalHeight = measured.height + spanBand + areaBand;
-      final fitX =
-          totalWidth <= targetWidth ? 1.0 : targetWidth / totalWidth;
-      final fitY =
-          totalHeight <= targetHeight ? 1.0 : targetHeight / totalHeight;
+      final fitX = totalWidth <= targetWidth ? 1.0 : targetWidth / totalWidth;
+      final fitY = totalHeight <= targetHeight
+          ? 1.0
+          : targetHeight / totalHeight;
       return math.min(fitX, fitY);
     }
 
@@ -219,11 +222,7 @@ class SketchPainter extends CustomPainter {
   ///
   /// Botiq (ichkariga kirgan) burchaklarda qo'shni devorlarning yozuvlari bir
   /// nuqtaga yaqin tushadi — shuning uchun ularni bir-biridan ajratamiz.
-  Rect _resolveLabels(
-    _Layout layout,
-    List<_EdgeLabel> labels,
-    Rect shapeRect,
-  ) {
+  Rect _resolveLabels(_Layout layout, List<_EdgeLabel> labels, Rect shapeRect) {
     for (final label in labels) {
       label.gap = labelGap;
     }
@@ -235,8 +234,10 @@ class SketchPainter extends CustomPainter {
           final a = labels[i].rectFor(layout.toPixel(labels[i].anchor));
           final b = labels[j].rectFor(layout.toPixel(labels[j].anchor));
           if (!a.overlaps(b)) continue;
-          final overlapX = math.min(a.right, b.right) - math.max(a.left, b.left);
-          final overlapY = math.min(a.bottom, b.bottom) - math.max(a.top, b.top);
+          final overlapX =
+              math.min(a.right, b.right) - math.max(a.left, b.left);
+          final overlapY =
+              math.min(a.bottom, b.bottom) - math.max(a.top, b.top);
           final push = math.min(overlapX, overlapY) + 3;
           final next = math.min(labels[i].gap + push, _maxLabelGap);
           if (next <= labels[i].gap) continue;
@@ -432,17 +433,17 @@ class SketchPainter extends CustomPainter {
   }
 
   TextPainter _buildSpanLabel(double factor) => _textPainter(
-        Fmt.meters(geometry.bounds.width),
-        color: textColor,
-        size: 12.5 * factor,
-        weight: FontWeight.w500,
-      );
+    Fmt.meters(geometry.bounds.width),
+    color: textColor,
+    size: 12.5 * factor,
+    weight: FontWeight.w500,
+  );
 
   TextPainter _buildAreaLabel(double factor) => _textPainter(
-        'S ≈ ${Fmt.area(geometry.area)}',
-        color: mutedColor,
-        size: 12.5 * factor,
-      );
+    'S ≈ ${Fmt.area(geometry.area)}',
+    color: mutedColor,
+    size: 12.5 * factor,
+  );
 
   TextPainter _textPainter(
     String text, {
@@ -467,7 +468,12 @@ class SketchPainter extends CustomPainter {
 
   // --- Yordamchilar --------------------------------------------------------
 
-  void _drawArrowHead(Canvas canvas, Offset tip, double direction, Paint paint) {
+  void _drawArrowHead(
+    Canvas canvas,
+    Offset tip,
+    double direction,
+    Paint paint,
+  ) {
     const length = 6.0;
     const spread = 3.0;
     final path = Path()
@@ -532,8 +538,6 @@ class _Layout {
   /// Butun kompozitsiya maydonga sig'dimi.
   final bool fits;
 
-  Offset toPixel(Offset point) => Offset(
-        origin.dx + point.dx * scale,
-        origin.dy + point.dy * scale,
-      );
+  Offset toPixel(Offset point) =>
+      Offset(origin.dx + point.dx * scale, origin.dy + point.dy * scale);
 }

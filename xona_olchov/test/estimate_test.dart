@@ -14,11 +14,7 @@ void main() {
     });
 
     test('devorlar yuzasi = perimetr × balandlik', () {
-      const estimate = RoomEstimate(
-        floorArea: 20,
-        perimeter: 18,
-        height: 2.8,
-      );
+      const estimate = RoomEstimate(floorArea: 20, perimeter: 18, height: 2.8);
       expect(estimate.wallArea, closeTo(50.4, 0.0001));
       expect(estimate.volume, closeTo(56, 0.0001));
       expect(estimate.totalSurface, closeTo(70.4, 0.0001));

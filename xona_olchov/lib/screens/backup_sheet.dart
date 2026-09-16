@@ -73,7 +73,8 @@ class _BackupSheetState extends State<BackupSheet> {
     setState(() {
       _busy = false;
       _tone = NoteTone.info;
-      _message = '${result.added} ta yangi, ${result.updated} ta yangilandi, '
+      _message =
+          '${result.added} ta yangi, ${result.updated} ta yangilandi, '
           '${result.skipped} ta o‘zgarmadi.'
           '${parsed.error == null ? '' : ' (${parsed.error})'}';
     });

@@ -11,11 +11,7 @@ import '../theme/app_theme.dart';
 /// Rasm internetdan yuklanmaydi — har bir tur shu yerda chiziladi, shuning
 /// uchun ko'rgazma internetsiz ham, sekin tarmoqda ham bir xil ochiladi.
 class CeilingPreview extends StatelessWidget {
-  const CeilingPreview({
-    super.key,
-    required this.design,
-    this.radius = 14,
-  });
+  const CeilingPreview({super.key, required this.design, this.radius = 14});
 
   final CeilingDesign design;
   final double radius;
@@ -151,10 +147,7 @@ class _CeilingPainter extends CustomPainter {
       inner,
       Radius.circular(rect.shortestSide * 0.12),
     );
-    canvas.drawRRect(
-      innerRRect,
-      Paint()..color = const Color(0xFF0D2E28),
-    );
+    canvas.drawRRect(innerRRect, Paint()..color = const Color(0xFF0D2E28));
     canvas.drawRRect(
       innerRRect,
       Paint()
@@ -205,14 +198,10 @@ class _CeilingPainter extends CustomPainter {
       center,
       radius,
       Paint()
-        ..shader = ui.Gradient.radial(
-          center,
-          radius,
-          <Color>[
-            AppColors.goldSoft.withValues(alpha: glow),
-            AppColors.goldSoft.withValues(alpha: 0),
-          ],
-        ),
+        ..shader = ui.Gradient.radial(center, radius, <Color>[
+          AppColors.goldSoft.withValues(alpha: glow),
+          AppColors.goldSoft.withValues(alpha: 0),
+        ]),
     );
     canvas.drawCircle(
       center,

@@ -62,8 +62,11 @@ class _EmptySketch extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Icons.architecture_outlined,
-              color: AppColors.textSecondary, size: 28),
+          Icon(
+            Icons.architecture_outlined,
+            color: AppColors.textSecondary,
+            size: 28,
+          ),
           SizedBox(height: 8),
           Text(
             "O‘lchamlarni kiriting",

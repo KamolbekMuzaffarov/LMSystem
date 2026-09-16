@@ -11,7 +11,7 @@ import '../models/room_sketch.dart';
 /// Saqlangan chizma faqat tahrirlanishi mumkin, o'chirilmaydi.
 class SketchStore extends ChangeNotifier {
   SketchStore._(this._prefs, List<RoomSketch> initial)
-      : _sketches = List<RoomSketch>.of(initial) {
+    : _sketches = List<RoomSketch>.of(initial) {
     _sort();
   }
 

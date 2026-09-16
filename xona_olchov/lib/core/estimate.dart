@@ -65,8 +65,7 @@ class RoomEstimate {
   }
 
   /// Plintus uzunligi — perimetrdan eshiklar eni ayrilgan, m.
-  double get skirtingLength =>
-      math.max(perimeter - openings.doorWidth, 0);
+  double get skirtingLength => math.max(perimeter - openings.doorWidth, 0);
 
   /// Zaxira qo'shilgan qiymat.
   double withReserve(double value) => value * factor;

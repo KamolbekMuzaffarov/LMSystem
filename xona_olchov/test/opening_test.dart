@@ -23,11 +23,7 @@ void main() {
     test('yaroqsiz o‘lcham hisobga kirmaydi', () {
       const zero = Opening(kind: OpeningKind.door, width: 0, height: 2);
       const huge = Opening(kind: OpeningKind.door, width: 50, height: 2);
-      const nan = Opening(
-        kind: OpeningKind.door,
-        width: double.nan,
-        height: 2,
-      );
+      const nan = Opening(kind: OpeningKind.door, width: double.nan, height: 2);
       const none = Opening(
         kind: OpeningKind.door,
         width: 0.8,
@@ -162,7 +158,10 @@ void main() {
       final sketch = build();
       final restored = RoomSketch.fromJson(sketch.toJson());
       expect(restored.openings, sketch.openings);
-      expect(restored.estimate.wallArea, closeTo(sketch.estimate.wallArea!, 1e-9));
+      expect(
+        restored.estimate.wallArea,
+        closeTo(sketch.estimate.wallArea!, 1e-9),
+      );
       expect(restored.estimate.skirtingLength, closeTo(17.2, 1e-9));
     });
 

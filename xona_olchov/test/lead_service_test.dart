@@ -14,13 +14,13 @@ import 'package:xona_olchov/services/lead_sender.dart';
 import 'package:xona_olchov/services/lead_service.dart';
 
 Lead sample({String id = 'l1', String name = 'Kamol'}) => Lead(
-      id: id,
-      name: name,
-      phone: '+998939856102',
-      area: 20,
-      design: CeilingDesign.glossy,
-      createdAt: DateTime(2026, 9, 14, 10, 30),
-    );
+  id: id,
+  name: name,
+  phone: '+998939856102',
+  area: 20,
+  design: CeilingDesign.glossy,
+  createdAt: DateTime(2026, 9, 14, 10, 30),
+);
 
 /// Har bir so'rovni yozib boradigan soxta mijoz.
 class Recorder {
@@ -175,10 +175,7 @@ void main() {
       final (store, sender) = await build(
         client: MockClient((_) async => throw const SocketException('yo‘q')),
       );
-      final result = await sender.submit(
-        name: 'Kamol',
-        phone: '+998939856102',
-      );
+      final result = await sender.submit(name: 'Kamol', phone: '+998939856102');
 
       expect(result.outcome, SendOutcome.offline);
       expect(store.count, 1, reason: 'ariza yo‘qolmaydi');
@@ -280,9 +277,7 @@ void main() {
         ),
         isOnline: () async => true,
       );
-      await store.add(
-        sample().copyWith(attempts: LeadSender.maxAttempts),
-      );
+      await store.add(sample().copyWith(attempts: LeadSender.maxAttempts));
       expect(await sender.flushPending(), 0);
       expect(store.leads.single.attempts, LeadSender.maxAttempts);
     });

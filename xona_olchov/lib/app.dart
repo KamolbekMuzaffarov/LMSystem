@@ -7,11 +7,7 @@ import 'screens/root_shell.dart';
 import 'theme/app_theme.dart';
 
 class XonaOlchovApp extends StatelessWidget {
-  const XonaOlchovApp({
-    super.key,
-    required this.store,
-    required this.potolok,
-  });
+  const XonaOlchovApp({super.key, required this.store, required this.potolok});
 
   /// Chizmalar ombori.
   final SketchStore store;

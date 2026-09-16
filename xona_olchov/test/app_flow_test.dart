@@ -17,9 +17,7 @@ void main() {
     addTearDown(tester.view.reset);
     final store = await SketchStore.open();
     final potolok = await PotolokStore.open();
-    await tester.pumpWidget(
-      XonaOlchovApp(store: store, potolok: potolok),
-    );
+    await tester.pumpWidget(XonaOlchovApp(store: store, potolok: potolok));
     await tester.pumpAndSettle();
     return store;
   }
@@ -56,10 +54,7 @@ void main() {
     // Namunadagi natija: 53.27 m².
     expect(find.text('53.27 m²'), findsWidgets);
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Nomi'),
-      'Katta zal',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Nomi'), 'Katta zal');
     await tester.pump();
 
     await tester.tap(find.widgetWithText(FilledButton, 'Saqlash'));
@@ -83,10 +78,7 @@ void main() {
     await tester.tap(find.text('To‘rtburchak').first);
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Uzunligi'),
-      '5',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Uzunligi'), '5');
     await tester.enterText(find.widgetWithText(TextField, 'Kengligi'), '4');
     await tester.pump();
 
@@ -102,14 +94,8 @@ void main() {
       find.widgetWithText(TextField, 'Uzunligi (ikki tomon orasidagi masofa)'),
       '10',
     );
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Chap tomoni'),
-      '3',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextField, 'O‘ng tomoni'),
-      '3',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Chap tomoni'), '3');
+    await tester.enterText(find.widgetWithText(TextField, 'O‘ng tomoni'), '3');
     await tester.pump();
     await tester.tap(find.widgetWithText(FilledButton, 'Saqlash'));
     await tester.pumpAndSettle();
@@ -131,10 +117,7 @@ void main() {
     expect(find.byIcon(Icons.delete), findsNothing);
     expect(find.byIcon(Icons.delete_outline), findsNothing);
     expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
-    expect(
-      find.textContaining('o‘chirilmaydi'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('o‘chirilmaydi'), findsOneWidget);
   });
 
   testWidgets('ko‘p burchakli xona: L-shakl shabloni', (tester) async {

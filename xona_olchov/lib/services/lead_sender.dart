@@ -17,8 +17,8 @@ class LeadSender {
     required this.store,
     LeadService? service,
     Future<bool> Function()? isOnline,
-  })  : _service = service ?? LeadService(),
-        _isOnline = isOnline ?? _defaultIsOnline;
+  }) : _service = service ?? LeadService(),
+       _isOnline = isOnline ?? _defaultIsOnline;
 
   final PotolokStore store;
   final LeadService _service;
@@ -86,20 +86,20 @@ class LeadSender {
     final result = await _service.send(lead);
     final updated = switch (result.outcome) {
       SendOutcome.sent => lead.copyWith(
-          status: LeadStatus.sent,
-          sentAt: DateTime.now(),
-          attempts: lead.attempts + 1,
-          clearError: true,
-        ),
+        status: LeadStatus.sent,
+        sentAt: DateTime.now(),
+        attempts: lead.attempts + 1,
+        clearError: true,
+      ),
       SendOutcome.rejected => lead.copyWith(
-          status: LeadStatus.rejected,
-          attempts: lead.attempts + 1,
-          error: result.message ?? 'Server rad etdi',
-        ),
+        status: LeadStatus.rejected,
+        attempts: lead.attempts + 1,
+        error: result.message ?? 'Server rad etdi',
+      ),
       SendOutcome.offline => lead.copyWith(
-          attempts: lead.attempts + 1,
-          error: result.message ?? 'Internet yo‘q',
-        ),
+        attempts: lead.attempts + 1,
+        error: result.message ?? 'Internet yo‘q',
+      ),
     };
     await store.update(updated);
     return result;

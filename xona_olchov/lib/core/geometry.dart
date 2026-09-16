@@ -145,10 +145,7 @@ class RoomGeometry {
   /// Devorlar bo'ylab yurib, xona burchaklarini hisoblaydi.
   ///
   /// [startHeading] — birinchi devor yo'nalishi, gradusda (0 — o'ngga).
-  static RoomGeometry fromWalls(
-    List<Wall> walls, {
-    double startHeading = 0,
-  }) {
+  static RoomGeometry fromWalls(List<Wall> walls, {double startHeading = 0}) {
     final usable = walls.where((w) => w.length.isFinite && w.length > 0).length;
     if (walls.isEmpty || usable == 0) return empty;
 
@@ -156,7 +153,9 @@ class RoomGeometry {
     var heading = degreesToRadians(startHeading);
     for (final wall in walls) {
       final last = points.last;
-      final length = wall.length.isFinite && wall.length > 0 ? wall.length : 0.0;
+      final length = wall.length.isFinite && wall.length > 0
+          ? wall.length
+          : 0.0;
       points.add(
         Offset(
           last.dx + length * math.cos(heading),

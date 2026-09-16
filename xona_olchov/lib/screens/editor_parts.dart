@@ -12,42 +12,36 @@ import '../widgets/ui_bits.dart';
 
 /// Ko'p burchakli xona uchun tayyor shablonlar.
 enum ShapeTemplate {
-  rectangle(
-    'To‘rtburchak',
-    Icons.crop_square,
-    <(double, double)>[(5, 90), (4, 90), (5, 90), (4, 90)],
-  ),
-  lShape(
-    'L-shakl',
-    Icons.crop_7_5,
-    <(double, double)>[
-      (6, 90),
-      (3, 90),
-      (3, -90),
-      (3, 90),
-      (3, 90),
-      (6, 90),
-    ],
-  ),
-  uShape(
-    'U-shakl',
-    Icons.crop_16_9,
-    <(double, double)>[
-      (8, 90),
-      (6, 90),
-      (2.5, 90),
-      (3.5, -90),
-      (3, -90),
-      (3.5, 90),
-      (2.5, 90),
-      (6, 90),
-    ],
-  ),
-  empty(
-    'Bo‘sh (4 devor)',
-    Icons.grid_4x4,
-    <(double, double)>[(0, 90), (0, 90), (0, 90), (0, 90)],
-  );
+  rectangle('To‘rtburchak', Icons.crop_square, <(double, double)>[
+    (5, 90),
+    (4, 90),
+    (5, 90),
+    (4, 90),
+  ]),
+  lShape('L-shakl', Icons.crop_7_5, <(double, double)>[
+    (6, 90),
+    (3, 90),
+    (3, -90),
+    (3, 90),
+    (3, 90),
+    (6, 90),
+  ]),
+  uShape('U-shakl', Icons.crop_16_9, <(double, double)>[
+    (8, 90),
+    (6, 90),
+    (2.5, 90),
+    (3.5, -90),
+    (3, -90),
+    (3.5, 90),
+    (2.5, 90),
+    (6, 90),
+  ]),
+  empty('Bo‘sh (4 devor)', Icons.grid_4x4, <(double, double)>[
+    (0, 90),
+    (0, 90),
+    (0, 90),
+    (0, 90),
+  ]);
 
   const ShapeTemplate(this.title, this.icon, this.walls);
 
@@ -115,7 +109,8 @@ class HeightSection extends StatelessWidget {
         if (outOfRange) ...<Widget>[
           const SizedBox(height: 10),
           NoteBanner(
-            text: 'Balandlik ${Fmt.number(RoomEstimate.minHeight, digits: 1)}'
+            text:
+                'Balandlik ${Fmt.number(RoomEstimate.minHeight, digits: 1)}'
                 '–${RoomEstimate.maxHeight.round()} m oralig‘ida bo‘lishi '
                 'kerak — bu qiymat saqlanmaydi.',
             tone: NoteTone.warning,
@@ -179,24 +174,23 @@ class OpeningDraft {
     required double width,
     required double height,
     this.count = 1,
-  })  : widthController =
-            TextEditingController(text: Fmt.number(width)),
-        heightController = TextEditingController(text: Fmt.number(height));
+  }) : widthController = TextEditingController(text: Fmt.number(width)),
+       heightController = TextEditingController(text: Fmt.number(height));
 
   OpeningDraft.from(Opening opening)
-      : kind = opening.kind,
-        count = opening.count,
-        widthController =
-            TextEditingController(text: Fmt.number(opening.width)),
-        heightController =
-            TextEditingController(text: Fmt.number(opening.height));
+    : kind = opening.kind,
+      count = opening.count,
+      widthController = TextEditingController(text: Fmt.number(opening.width)),
+      heightController = TextEditingController(
+        text: Fmt.number(opening.height),
+      );
 
   /// Tanlangan tur bo'yicha standart o'lchamlar bilan yangi qator.
   factory OpeningDraft.preset(OpeningKind kind) => OpeningDraft(
-        kind: kind,
-        width: kind.defaultWidth,
-        height: kind.defaultHeight,
-      );
+    kind: kind,
+    width: kind.defaultWidth,
+    height: kind.defaultHeight,
+  );
 
   OpeningKind kind;
   int count;
@@ -204,11 +198,11 @@ class OpeningDraft {
   final TextEditingController heightController;
 
   Opening toOpening() => Opening(
-        kind: kind,
-        width: Fmt.parseNumber(widthController.text) ?? 0,
-        height: Fmt.parseNumber(heightController.text) ?? 0,
-        count: count,
-      );
+    kind: kind,
+    width: Fmt.parseNumber(widthController.text) ?? 0,
+    height: Fmt.parseNumber(heightController.text) ?? 0,
+    count: count,
+  );
 
   void dispose() {
     widthController.dispose();
@@ -245,7 +239,8 @@ class OpeningsSection extends StatelessWidget {
       children: <Widget>[
         if (drafts.isEmpty)
           const NoteBanner(
-            text: 'Eshik va derazalarni qo‘shsangiz, ularning yuzasi '
+            text:
+                'Eshik va derazalarni qo‘shsangiz, ularning yuzasi '
                 'devorlardan ayriladi, eshiklar eni esa plintus '
                 'uzunligidan chiqariladi.',
             icon: Icons.sensor_door_outlined,
@@ -253,9 +248,7 @@ class OpeningsSection extends StatelessWidget {
         else ...<Widget>[
           for (var i = 0; i < drafts.length; i++)
             Padding(
-              padding: EdgeInsets.only(
-                bottom: i == drafts.length - 1 ? 0 : 10,
-              ),
+              padding: EdgeInsets.only(bottom: i == drafts.length - 1 ? 0 : 10),
               child: _OpeningRow(
                 draft: drafts[i],
                 onKindChanged: (kind) => onKindChanged(i, kind),
@@ -359,10 +352,7 @@ class _OpeningRow extends StatelessWidget {
                   ),
                 ),
               ),
-              _CountStepper(
-                value: draft.count,
-                onChanged: onCountChanged,
-              ),
+              _CountStepper(value: draft.count, onChanged: onCountChanged),
               IconButton(
                 tooltip: 'Olib tashlash',
                 onPressed: onRemove,
@@ -522,8 +512,10 @@ class WallRow extends StatelessWidget {
               isDense: true,
               hintText: '0.00',
               suffixText: 'm',
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
           ),
         ),
@@ -564,11 +556,7 @@ class WallRow extends StatelessWidget {
 
 /// Burilish burchagini tanlash tugmasi.
 class TurnSelector extends StatelessWidget {
-  const TurnSelector({
-    super.key,
-    required this.value,
-    required this.onChanged,
-  });
+  const TurnSelector({super.key, required this.value, required this.onChanged});
 
   final double value;
   final ValueChanged<double> onChanged;
@@ -584,7 +572,9 @@ class TurnSelector extends StatelessWidget {
   }
 
   Future<void> _custom(BuildContext context) async {
-    final controller = TextEditingController(text: Fmt.number(value, digits: 1));
+    final controller = TextEditingController(
+      text: Fmt.number(value, digits: 1),
+    );
     final result = await showDialog<double>(
       context: context,
       builder: (context) => AlertDialog(
@@ -622,9 +612,8 @@ class TurnSelector extends StatelessWidget {
             child: const Text('Bekor'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(
-              Fmt.parseNumber(controller.text),
-            ),
+            onPressed: () =>
+                Navigator.of(context).pop(Fmt.parseNumber(controller.text)),
             child: const Text('Tanlash'),
           ),
         ],
@@ -680,8 +669,8 @@ class TurnSelector extends StatelessWidget {
               value > 0
                   ? Icons.turn_right
                   : value < 0
-                      ? Icons.turn_left
-                      : Icons.straight,
+                  ? Icons.turn_left
+                  : Icons.straight,
               size: 17,
               color: AppColors.shapeStroke,
             ),

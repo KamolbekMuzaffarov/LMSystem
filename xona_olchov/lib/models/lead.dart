@@ -68,8 +68,7 @@ class Lead {
 
   bool get isPending => status == LeadStatus.pending;
 
-  CeilingQuote? get quote =>
-      area == null ? null : CeilingQuote(area: area!);
+  CeilingQuote? get quote => area == null ? null : CeilingQuote(area: area!);
 
   Lead copyWith({
     LeadStatus? status,
@@ -95,19 +94,19 @@ class Lead {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'phone': phone,
-        if (area != null) 'area': area,
-        if (design != null) 'design': design!.name,
-        if (address != null && address!.isNotEmpty) 'address': address,
-        if (comment.isNotEmpty) 'comment': comment,
-        'status': status.name,
-        'createdAt': createdAt.toIso8601String(),
-        if (sentAt != null) 'sentAt': sentAt!.toIso8601String(),
-        'attempts': attempts,
-        if (error != null) 'error': error,
-      };
+    'id': id,
+    'name': name,
+    'phone': phone,
+    if (area != null) 'area': area,
+    if (design != null) 'design': design!.name,
+    if (address != null && address!.isNotEmpty) 'address': address,
+    if (comment.isNotEmpty) 'comment': comment,
+    'status': status.name,
+    'createdAt': createdAt.toIso8601String(),
+    if (sentAt != null) 'sentAt': sentAt!.toIso8601String(),
+    'attempts': attempts,
+    if (error != null) 'error': error,
+  };
 
   static Lead fromJson(Map<String, dynamic> json) {
     return Lead(
@@ -131,17 +130,17 @@ class Lead {
   /// `website` — bo'sh qoladigan tuzoq maydon (honeypot): spam robotlar uni
   /// to'ldiradi, haqiqiy ilova esa hech qachon to'ldirmaydi.
   Map<String, dynamic> toPayload() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'phone': phone,
-        if (area != null) 'area': double.parse(area!.toStringAsFixed(2)),
-        if (design != null) 'design': design!.title,
-        if (address != null && address!.isNotEmpty) 'address': address,
-        if (comment.isNotEmpty) 'comment': comment,
-        'website': '',
-        'source': Brand.source,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'phone': phone,
+    if (area != null) 'area': double.parse(area!.toStringAsFixed(2)),
+    if (design != null) 'design': design!.title,
+    if (address != null && address!.isNotEmpty) 'address': address,
+    if (comment.isNotEmpty) 'comment': comment,
+    'website': '',
+    'source': Brand.source,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   /// Telegram botga yuboriladigan matn — server ishlamay qolsa zaxira yo'l.
   String toMessage() {
@@ -181,9 +180,36 @@ class Lead {
 abstract final class PhoneRules {
   /// Amaldagi operator kodlari.
   static const Set<String> operatorCodes = <String>{
-    '20', '33', '50', '55', '61', '62', '63', '65', '66', '67', '69',
-    '70', '71', '72', '73', '74', '75', '76', '77', '78', '79',
-    '88', '90', '91', '93', '94', '95', '97', '98', '99',
+    '20',
+    '33',
+    '50',
+    '55',
+    '61',
+    '62',
+    '63',
+    '65',
+    '66',
+    '67',
+    '69',
+    '70',
+    '71',
+    '72',
+    '73',
+    '74',
+    '75',
+    '76',
+    '77',
+    '78',
+    '79',
+    '88',
+    '90',
+    '91',
+    '93',
+    '94',
+    '95',
+    '97',
+    '98',
+    '99',
   };
 
   static const String countryCode = '998';

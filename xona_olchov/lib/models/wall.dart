@@ -53,18 +53,18 @@ class Wall {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'length': length,
-        'turn': turn,
-        if (label != null) 'label': label,
-        if (!showLength) 'showLength': false,
-      };
+    'length': length,
+    'turn': turn,
+    if (label != null) 'label': label,
+    if (!showLength) 'showLength': false,
+  };
 
   factory Wall.fromJson(Map<String, dynamic> json) => Wall(
-        length: _toDouble(json['length']),
-        turn: _toDouble(json['turn'], fallback: 90),
-        label: json['label'] as String?,
-        showLength: json['showLength'] as bool? ?? true,
-      );
+    length: _toDouble(json['length']),
+    turn: _toDouble(json['turn'], fallback: 90),
+    label: json['label'] as String?,
+    showLength: json['showLength'] as bool? ?? true,
+  );
 
   static double _toDouble(Object? value, {double fallback = 0}) {
     if (value is num) {

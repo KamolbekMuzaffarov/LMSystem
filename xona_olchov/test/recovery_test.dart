@@ -8,9 +8,9 @@ import 'package:xona_olchov/models/geo_point.dart';
 import 'package:xona_olchov/models/room_sketch.dart';
 
 String payload(List<RoomSketch> items) => jsonEncode(<String, dynamic>{
-      'version': SketchStore.schemaVersion,
-      'items': items.map((item) => item.toJson()).toList(),
-    });
+  'version': SketchStore.schemaVersion,
+  'items': items.map((item) => item.toJson()).toList(),
+});
 
 RoomSketch sketch(String id) {
   final now = DateTime.now();

@@ -26,9 +26,7 @@ class _LeadsScreenState extends State<LeadsScreen> {
     final ok = await ContactLinks.sendViaTelegram(lead);
     if (!mounted) return;
     context.showSnack(
-      ok
-          ? 'Matn nusxalandi — Telegramda joylashtiring'
-          : 'Telegram ochilmadi',
+      ok ? 'Matn nusxalandi — Telegramda joylashtiring' : 'Telegram ochilmadi',
     );
   }
 
@@ -73,7 +71,8 @@ class _LeadsScreenState extends State<LeadsScreen> {
           ? const EmptyState(
               icon: Icons.inbox_outlined,
               title: 'Ariza yo‘q',
-              message: 'Bo‘limdagi «Bepul o‘lchovga yozilish» tugmasi orqali '
+              message:
+                  'Bo‘limdagi «Bepul o‘lchovga yozilish» tugmasi orqali '
                   'birinchi arizani yuboring.',
             )
           : ListView.separated(

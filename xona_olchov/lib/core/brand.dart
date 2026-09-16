@@ -37,6 +37,12 @@ abstract final class Brand {
   /// Ariza qabul qiluvchi yo'l.
   static const String leadPath = '/api/lead';
 
+  /// AI yordamchi (savol-javob) yo'li.
+  ///
+  /// Claude API'ga to'g'ridan-to'g'ri emas, shu server orqali murojaat
+  /// qilinadi — API kaliti hech qachon ilovada bo'lmaydi.
+  static const String chatPath = '/api/chat';
+
   /// Ilova arizani qaysi manbadan yuborganini serverga bildiradi.
   static const String source = 'hisob-app';
 

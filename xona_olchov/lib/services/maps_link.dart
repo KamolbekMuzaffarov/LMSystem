@@ -71,7 +71,11 @@ abstract final class MapsLink {
     return null;
   }
 
-  static GeoPoint? _build(String? rawLat, String? rawLng, LocationSource source) {
+  static GeoPoint? _build(
+    String? rawLat,
+    String? rawLng,
+    LocationSource source,
+  ) {
     if (rawLat == null || rawLng == null) return null;
     final lat = double.tryParse(
       rawLat.replaceAll(',', '.').replaceAll(RegExp(r'[^0-9.\-]'), ''),

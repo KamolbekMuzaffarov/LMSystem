@@ -40,7 +40,8 @@ class SketchPickerSheet extends StatelessWidget {
             child: EmptyState(
               icon: Icons.straighten,
               title: 'Chizma yo‘q',
-              message: 'Avval «Chizmalar» bo‘limida xonani o‘lchang — '
+              message:
+                  'Avval «Chizmalar» bo‘limida xonani o‘lchang — '
                   'yuzasi shu yerda o‘zi paydo bo‘ladi.',
             ),
           );

@@ -6,18 +6,9 @@ enum CeilingDesign {
     'Glyanets',
     'Oyna kabi yaltiroq. Xonani kengroq va yorug‘roq ko‘rsatadi.',
   ),
-  matte(
-    'Mat',
-    'Suvoq kabi tekis, aks ettirmaydi. Klassik xonalarga mos.',
-  ),
-  satin(
-    'Satin',
-    'Yumshoq marvarid yaltirashi — mat bilan glyanets oralig‘i.',
-  ),
-  photoPrint(
-    'Foto-chop',
-    'Istalgan rasm to‘g‘ridan-to‘g‘ri shiftga bosiladi.',
-  ),
+  matte('Mat', 'Suvoq kabi tekis, aks ettirmaydi. Klassik xonalarga mos.'),
+  satin('Satin', 'Yumshoq marvarid yaltirashi — mat bilan glyanets oralig‘i.'),
+  photoPrint('Foto-chop', 'Istalgan rasm to‘g‘ridan-to‘g‘ri shiftga bosiladi.'),
   multiLevel(
     'Ko‘p darajali',
     'Ikki va undan ortiq daraja, yashirin yoritgich bilan.',

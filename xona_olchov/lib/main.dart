@@ -51,10 +51,7 @@ class _BootstrapState extends State<Bootstrap> {
             onRetry: _retry,
           );
         }
-        return XonaOlchovApp(
-          store: stores.sketches,
-          potolok: stores.potolok,
-        );
+        return XonaOlchovApp(store: stores.sketches, potolok: stores.potolok);
       },
     );
   }

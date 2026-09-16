@@ -10,6 +10,7 @@ import '../../services/lead_sender.dart';
 import '../../services/lead_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ui_bits.dart';
+import 'assistant_screen.dart';
 import 'lead_form_sheet.dart';
 import 'leads_screen.dart';
 import 'potolok_parts.dart';
@@ -64,9 +65,9 @@ class _PotolokScreenState extends State<PotolokScreen> {
       Fmt.parseNumber(_area.text) != null && _areaValue == null;
 
   CeilingQuote get _quote => CeilingQuote(
-        area: _areaValue ?? 0,
-        somPerUsd: PotolokScope.of(context).somPerUsd,
-      );
+    area: _areaValue ?? 0,
+    somPerUsd: PotolokScope.of(context).somPerUsd,
+  );
 
   Future<void> _flush() async {
     if (_flushing) return;
@@ -88,6 +89,11 @@ class _PotolokScreenState extends State<PotolokScreen> {
       _area.text = sketch.area.toStringAsFixed(2);
       _address = sketch.location?.address;
     });
+  }
+
+  void _openAssistant() {
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const AssistantScreen()));
   }
 
   Future<void> _order() async {
@@ -119,10 +125,10 @@ class _PotolokScreenState extends State<PotolokScreen> {
         content: Text(
           queued
               ? 'Internet yo‘q — ariza telefoningizda saqlandi va ulanish '
-                  'tiklanganda o‘zi jo‘naydi. Shoshilinch bo‘lsa qo‘ng‘iroq '
-                  'qiling.'
+                    'tiklanganda o‘zi jo‘naydi. Shoshilinch bo‘lsa qo‘ng‘iroq '
+                    'qiling.'
               : 'Tez orada qo‘ng‘iroq qilamiz. Shoshilinch bo‘lsa — '
-                  'o‘zingiz qo‘ng‘iroq qiling, darrov javob beramiz.',
+                    'o‘zingiz qo‘ng‘iroq qiling, darrov javob beramiz.',
           style: const TextStyle(height: 1.45),
         ),
         actions: <Widget>[
@@ -184,6 +190,11 @@ class _PotolokScreenState extends State<PotolokScreen> {
         title: const Text(Brand.section),
         actions: <Widget>[
           IconButton(
+            tooltip: 'AI yordamchi',
+            onPressed: _openAssistant,
+            icon: const Icon(Icons.support_agent, color: AppColors.gold),
+          ),
+          IconButton(
             tooltip: 'Arizalarim',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -219,10 +230,8 @@ class _PotolokScreenState extends State<PotolokScreen> {
           ],
           PotolokHero(
             onCall: _call,
-            onTelegram: () => _open(
-              ContactLinks.telegram,
-              'Telegram ochilmadi',
-            ),
+            onTelegram: () =>
+                _open(ContactLinks.telegram, 'Telegram ochilmadi'),
           ),
           const SizedBox(height: 14),
           _Calculator(
@@ -234,11 +243,12 @@ class _PotolokScreenState extends State<PotolokScreen> {
             onOrder: _order,
           ),
           const SizedBox(height: 14),
+          _AssistantCard(onTap: _openAssistant),
+          const SizedBox(height: 14),
           DesignGallery(
             selected: _design,
-            onSelect: (design) => setState(
-              () => _design = _design == design ? null : design,
-            ),
+            onSelect: (design) =>
+                setState(() => _design = _design == design ? null : design),
           ),
           const SizedBox(height: 14),
           const WhyUsCard(),
@@ -336,7 +346,8 @@ class _Calculator extends StatelessWidget {
             NoteBanner(
               tone: NoteTone.warning,
               icon: Icons.warning_amber_outlined,
-              text: 'Yuza 0 dan katta va ${CeilingPrice.maxArea.round()} m² '
+              text:
+                  'Yuza 0 dan katta va ${CeilingPrice.maxArea.round()} m² '
                   'dan kichik bo‘lishi kerak.',
             )
           else
@@ -413,8 +424,9 @@ class PhoneDialog extends StatefulWidget {
 }
 
 class _PhoneDialogState extends State<PhoneDialog> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.initial ?? '');
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initial ?? '',
+  );
 
   @override
   void dispose() {
@@ -456,6 +468,79 @@ class _PhoneDialogState extends State<PhoneDialog> {
           child: const Text('Saqlash'),
         ),
       ],
+    );
+  }
+}
+
+/// AI yordamchiga olib boradigan karta.
+class _AssistantCard extends StatelessWidget {
+  const _AssistantCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.30)),
+          ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.support_agent,
+                  color: AppColors.gold,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'AI yordamchi',
+                      style: TextStyle(
+                        fontFamily: kSerif,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Narx, kafolat, turlari — savolingizga darrov javob',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.35,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right,
+                color: AppColors.textSecondary,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -78,18 +78,18 @@ class Opening {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'kind': kind.name,
-        'width': width,
-        'height': height,
-        if (count != 1) 'count': count,
-      };
+    'kind': kind.name,
+    'width': width,
+    'height': height,
+    if (count != 1) 'count': count,
+  };
 
   factory Opening.fromJson(Map<String, dynamic> json) => Opening(
-        kind: OpeningKind.fromName(json['kind'] as String?),
-        width: _toDouble(json['width']),
-        height: _toDouble(json['height']),
-        count: _toCount(json['count']),
-      );
+    kind: OpeningKind.fromName(json['kind'] as String?),
+    width: _toDouble(json['width']),
+    height: _toDouble(json['height']),
+    count: _toCount(json['count']),
+  );
 
   static double _toDouble(Object? value) {
     if (value is num) {

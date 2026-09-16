@@ -82,12 +82,12 @@ class RoomSketch {
 
   /// Material hisob-kitobi (pol, potolok, devorlar, hajm).
   RoomEstimate get estimate => RoomEstimate(
-        floorArea: area,
-        perimeter: perimeter,
-        height: height,
-        reservePercent: reservePercent,
-        openings: openings,
-      );
+    floorArea: area,
+    perimeter: perimeter,
+    height: height,
+    reservePercent: reservePercent,
+    openings: openings,
+  );
 
   /// Ro'yxatda ko'rsatiladigan nom.
   String get displayName => name.trim().isEmpty ? 'Nomsiz chizma' : name.trim();
@@ -147,21 +147,21 @@ class RoomSketch {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'name': name,
-        'description': description,
-        'kind': kind.name,
-        'startHeading': startHeading,
-        'walls': walls.map((w) => w.toJson()).toList(growable: false),
-        if (presetInputs.isNotEmpty) 'presetInputs': presetInputs,
-        if (location != null) 'location': location!.toJson(),
-        if (height != null) 'height': height,
-        if (reservePercent != 0) 'reservePercent': reservePercent,
-        if (openings.isNotEmpty)
-          'openings': openings.map((o) => o.toJson()).toList(growable: false),
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'description': description,
+    'kind': kind.name,
+    'startHeading': startHeading,
+    'walls': walls.map((w) => w.toJson()).toList(growable: false),
+    if (presetInputs.isNotEmpty) 'presetInputs': presetInputs,
+    if (location != null) 'location': location!.toJson(),
+    if (height != null) 'height': height,
+    if (reservePercent != 0) 'reservePercent': reservePercent,
+    if (openings.isNotEmpty)
+      'openings': openings.map((o) => o.toJson()).toList(growable: false),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+  };
 
   factory RoomSketch.fromJson(Map<String, dynamic> json) {
     final rawWalls = json['walls'];
@@ -215,7 +215,9 @@ class RoomSketch {
           ? RoomEstimate.validHeight((json['height'] as num).toDouble())
           : null,
       reservePercent: json['reservePercent'] is num
-          ? RoomEstimate.clampReserve((json['reservePercent'] as num).toDouble())
+          ? RoomEstimate.clampReserve(
+              (json['reservePercent'] as num).toDouble(),
+            )
           : 0,
       openings: List<Opening>.unmodifiable(openings),
       createdAt: createdAt,

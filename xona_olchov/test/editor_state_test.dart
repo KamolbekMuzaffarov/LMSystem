@@ -15,9 +15,7 @@ void main() {
     addTearDown(tester.view.reset);
     final store = await SketchStore.open();
     final potolok = await PotolokStore.open();
-    await tester.pumpWidget(
-      XonaOlchovApp(store: store, potolok: potolok),
-    );
+    await tester.pumpWidget(XonaOlchovApp(store: store, potolok: potolok));
     await tester.pumpAndSettle();
     return store;
   }
@@ -39,8 +37,9 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('maydonga tegish saqlanmagan o‘zgarish hisoblanmaydi',
-      (tester) async {
+  testWidgets('maydonga tegish saqlanmagan o‘zgarish hisoblanmaydi', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await openNew(tester);
 
@@ -52,15 +51,20 @@ void main() {
     expect(canPop(tester), isTrue, reason: 'fokus dirty qilmasligi kerak');
   });
 
-  testWidgets('nomni yozish saqlanmagan o‘zgarish sifatida belgilanadi',
-      (tester) async {
+  testWidgets('nomni yozish saqlanmagan o‘zgarish sifatida belgilanadi', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await openNew(tester);
     expect(canPop(tester), isTrue);
 
     await tester.enterText(find.widgetWithText(TextField, 'Nomi'), 'Zal');
     await tester.pump();
-    expect(canPop(tester), isFalse, reason: 'matn yozildi — chiqishda so‘ralsin');
+    expect(
+      canPop(tester),
+      isFalse,
+      reason: 'matn yozildi — chiqishda so‘ralsin',
+    );
   });
 
   testWidgets('tavsifni yozish ham belgilanadi', (tester) async {
@@ -71,8 +75,9 @@ void main() {
     expect(canPop(tester), isFalse);
   });
 
-  testWidgets('burilish saqlanadi va qayta ochilganda yo‘qolmaydi',
-      (tester) async {
+  testWidgets('burilish saqlanadi va qayta ochilganda yo‘qolmaydi', (
+    tester,
+  ) async {
     final store = await pumpApp(tester);
     await openNew(tester);
     await fillRectangle(tester);
@@ -105,8 +110,9 @@ void main() {
     );
   });
 
-  testWidgets('balandlik kiritilsa devorlar yuzasi ko‘rinadi va saqlanadi',
-      (tester) async {
+  testWidgets('balandlik kiritilsa devorlar yuzasi ko‘rinadi va saqlanadi', (
+    tester,
+  ) async {
     final store = await pumpApp(tester);
     await openNew(tester);
     await fillRectangle(tester);

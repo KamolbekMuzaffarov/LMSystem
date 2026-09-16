@@ -45,19 +45,19 @@ class GeoPoint {
   static bool isValidLongitude(double value) =>
       value.isFinite && value >= -180 && value <= 180;
 
-  bool get isValid =>
-      isValidLatitude(latitude) && isValidLongitude(longitude);
+  bool get isValid => isValidLatitude(latitude) && isValidLongitude(longitude);
 
   String get coordinatesText =>
       '${latitude.toStringAsFixed(6)}, ${longitude.toStringAsFixed(6)}';
 
   /// Google Maps'da ochish uchun havola.
   Uri get mapsUri => Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
-      );
+    'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+  );
 
   /// Qurilmadagi xarita ilovasi uchun geo havola.
-  Uri get geoUri => Uri.parse('geo:$latitude,$longitude?q=$latitude,$longitude');
+  Uri get geoUri =>
+      Uri.parse('geo:$latitude,$longitude?q=$latitude,$longitude');
 
   GeoPoint copyWith({
     double? latitude,
@@ -79,14 +79,13 @@ class GeoPoint {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'lat': latitude,
-        'lng': longitude,
-        if (address != null) 'address': address,
-        if (accuracy != null) 'accuracy': accuracy,
-        'source': source.name,
-        if (capturedAt != null)
-          'capturedAt': capturedAt!.toUtc().toIso8601String(),
-      };
+    'lat': latitude,
+    'lng': longitude,
+    if (address != null) 'address': address,
+    if (accuracy != null) 'accuracy': accuracy,
+    'source': source.name,
+    if (capturedAt != null) 'capturedAt': capturedAt!.toUtc().toIso8601String(),
+  };
 
   factory GeoPoint.fromJson(Map<String, dynamic> json) {
     final capturedAt = json['capturedAt'];
@@ -98,8 +97,9 @@ class GeoPoint {
           ? (json['accuracy'] as num).toDouble()
           : null,
       source: LocationSource.fromName(json['source'] as String?),
-      capturedAt:
-          capturedAt is String ? DateTime.tryParse(capturedAt)?.toLocal() : null,
+      capturedAt: capturedAt is String
+          ? DateTime.tryParse(capturedAt)?.toLocal()
+          : null,
     );
   }
 

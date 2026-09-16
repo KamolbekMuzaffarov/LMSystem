@@ -64,8 +64,9 @@ abstract final class AppTheme {
     return base.copyWith(
       textTheme: base.textTheme.copyWith(
         displaySmall: base.textTheme.displaySmall?.copyWith(fontFamily: kSerif),
-        headlineMedium:
-            base.textTheme.headlineMedium?.copyWith(fontFamily: kSerif),
+        headlineMedium: base.textTheme.headlineMedium?.copyWith(
+          fontFamily: kSerif,
+        ),
         headlineSmall: base.textTheme.headlineSmall?.copyWith(
           fontFamily: kSerif,
           color: AppColors.textPrimary,
@@ -112,8 +113,10 @@ abstract final class AppTheme {
         hintStyle: const TextStyle(color: AppColors.textSecondary),
         labelStyle: const TextStyle(color: AppColors.textSecondary),
         floatingLabelStyle: const TextStyle(color: AppColors.shapeStroke),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -124,7 +127,10 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.shapeStroke, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.shapeStroke,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -171,9 +177,7 @@ abstract final class AppTheme {
         backgroundColor: AppColors.surfaceHigh,
         contentTextStyle: const TextStyle(color: AppColors.textPrimary),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: AppColors.surface,
@@ -185,17 +189,13 @@ abstract final class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceHigh,
         side: BorderSide.none,
         labelStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(

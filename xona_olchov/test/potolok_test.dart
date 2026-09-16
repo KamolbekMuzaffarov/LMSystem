@@ -7,12 +7,12 @@ import 'package:xona_olchov/models/ceiling.dart';
 import 'package:xona_olchov/models/lead.dart';
 
 Lead lead(String id, {LeadStatus status = LeadStatus.pending}) => Lead(
-      id: id,
-      name: 'Kamol',
-      phone: '+998939856102',
-      createdAt: DateTime(2026, 9, 14, 10, int.parse(id)),
-      status: status,
-    );
+  id: id,
+  name: 'Kamol',
+  phone: '+998939856102',
+  createdAt: DateTime(2026, 9, 14, 10, int.parse(id)),
+  status: status,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +52,10 @@ void main() {
         CeilingPrice.normalizeRate(double.nan),
         CeilingPrice.defaultSomPerUsd,
       );
-      expect(const CeilingQuote(area: 10, somPerUsd: 0).som, closeTo(756000, 1e-6));
+      expect(
+        const CeilingQuote(area: 10, somPerUsd: 0).som,
+        closeTo(756000, 1e-6),
+      );
     });
 
     test('e‘lon qilinadigan narx faqat eng past daraja', () {
@@ -165,11 +168,7 @@ void main() {
       expect(payload['area'], 24.46, reason: 'ikki xonagacha');
       expect(payload['design'], 'Glyanets');
       expect(payload['source'], Brand.source);
-      expect(
-        payload['website'],
-        '',
-        reason: 'honeypot maydoni har doim bo‘sh',
-      );
+      expect(payload['website'], '', reason: 'honeypot maydoni har doim bo‘sh');
       expect(payload.containsKey('status'), isFalse);
     });
 
@@ -212,9 +211,7 @@ void main() {
     test('holat yangilanadi, ariza tarixda qoladi', () async {
       final store = await PotolokStore.open();
       await store.add(lead('1'));
-      await store.update(
-        store.byId('1')!.copyWith(status: LeadStatus.sent),
-      );
+      await store.update(store.byId('1')!.copyWith(status: LeadStatus.sent));
       expect(store.count, 1, reason: 'yangilash nusxa yaratmasin');
       expect(store.pendingCount, 0);
       expect(store.byId('1')?.status, LeadStatus.sent);

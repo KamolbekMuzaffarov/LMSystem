@@ -18,8 +18,8 @@ abstract final class AboutSheet {
 class _AboutBody extends StatelessWidget {
   const _AboutBody();
 
-  static const List<(IconData, String, String)> _points =
-      <(IconData, String, String)>[
+  static const List<(IconData, String, String)>
+  _points = <(IconData, String, String)>[
     (
       Icons.straighten,
       "O‘lchamdan chizma",

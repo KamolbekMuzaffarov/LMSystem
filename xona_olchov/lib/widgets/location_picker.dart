@@ -91,11 +91,7 @@ class _LocationPickerState extends State<LocationPicker> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Icon(
-                  Icons.place,
-                  color: AppColors.shapeStroke,
-                  size: 18,
-                ),
+                const Icon(Icons.place, color: AppColors.shapeStroke, size: 18),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -264,7 +260,8 @@ class _ManualLocationSheetState extends State<_ManualLocationSheet> {
     if (raw.trim().isEmpty) return;
     if (MapsLink.isShortLink(raw)) {
       setState(() {
-        _error = 'Qisqartirilgan havolada koordinata yo‘q. Google Maps’da '
+        _error =
+            'Qisqartirilgan havolada koordinata yo‘q. Google Maps’da '
             'joyni bosib turing va chiqqan koordinatani nusxalang.';
       });
       return;
@@ -293,15 +290,20 @@ class _ManualLocationSheetState extends State<_ManualLocationSheet> {
   }
 
   Future<void> _submit() async {
-    final lat = double.tryParse(_latController.text.trim().replaceAll(',', '.'));
-    final lng = double.tryParse(_lngController.text.trim().replaceAll(',', '.'));
+    final lat = double.tryParse(
+      _latController.text.trim().replaceAll(',', '.'),
+    );
+    final lng = double.tryParse(
+      _lngController.text.trim().replaceAll(',', '.'),
+    );
     if (lat == null || lng == null) {
       setState(() => _error = 'Koordinatalarni to‘g‘ri kiriting');
       return;
     }
     if (!GeoPoint.isValidLatitude(lat) || !GeoPoint.isValidLongitude(lng)) {
       setState(
-        () => _error = 'Kenglik −90…90, uzunlik −180…180 oralig‘ida bo‘lishi kerak',
+        () => _error =
+            'Kenglik −90…90, uzunlik −180…180 oralig‘ida bo‘lishi kerak',
       );
       return;
     }

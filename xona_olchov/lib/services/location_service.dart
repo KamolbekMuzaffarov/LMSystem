@@ -33,8 +33,7 @@ class LocationResult {
         "Internet o‘chiq — lokatsiyani qo‘lda kiriting yoki internetni yoqing",
       LocationStatus.serviceDisabled =>
         "Qurilmada joylashuv (GPS) o‘chiq — uni yoqing",
-      LocationStatus.permissionDenied =>
-        'Lokatsiyaga ruxsat berilmadi',
+      LocationStatus.permissionDenied => 'Lokatsiyaga ruxsat berilmadi',
       LocationStatus.permissionDeniedForever =>
         'Lokatsiyaga ruxsat butunlay yopilgan — sozlamalardan yoqing',
       LocationStatus.timeout =>

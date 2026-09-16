@@ -21,9 +21,7 @@ void main() {
     addTearDown(tester.view.reset);
     final store = await SketchStore.open();
     final potolok = await PotolokStore.open();
-    await tester.pumpWidget(
-      XonaOlchovApp(store: store, potolok: potolok),
-    );
+    await tester.pumpWidget(XonaOlchovApp(store: store, potolok: potolok));
     await tester.pumpAndSettle();
     return store;
   }
@@ -50,8 +48,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('eshik qo‘shilsa devor yuzasi kamayadi va saqlanadi',
-      (tester) async {
+  testWidgets('eshik qo‘shilsa devor yuzasi kamayadi va saqlanadi', (
+    tester,
+  ) async {
     final store = await pumpApp(tester);
     await openNew(tester);
     await fillRectangle(tester);
@@ -92,8 +91,9 @@ void main() {
     expect(find.text('16.40 m'), findsOneWidget);
   });
 
-  testWidgets('oraliqdan tashqari balandlik ogohlantiradi va saqlanmaydi',
-      (tester) async {
+  testWidgets('oraliqdan tashqari balandlik ogohlantiradi va saqlanmaydi', (
+    tester,
+  ) async {
     final store = await pumpApp(tester);
     await openNew(tester);
     await fillRectangle(tester);
@@ -112,8 +112,9 @@ void main() {
     expect(store.sketches.single.height, isNull);
   });
 
-  testWidgets('o‘lcham maydoni manfiy son va ikki nuqtani o‘tkazmaydi',
-      (tester) async {
+  testWidgets('o‘lcham maydoni manfiy son va ikki nuqtani o‘tkazmaydi', (
+    tester,
+  ) async {
     final controller = TextEditingController();
     addTearDown(controller.dispose);
     await tester.pumpWidget(
@@ -142,18 +143,19 @@ void main() {
     expect(TurnSelector.clamp(double.nan), 0);
   });
 
-  testWidgets('balandlik olib tashlansa material kartasi polga qaytadi',
-      (tester) async {
+  testWidgets('balandlik olib tashlansa material kartasi polga qaytadi', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(720, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
     Widget build(RoomEstimate estimate) => MaterialApp(
-          theme: AppTheme.build(),
-          home: Scaffold(
-            body: ListView(children: <Widget>[MaterialCard(estimate: estimate)]),
-          ),
-        );
+      theme: AppTheme.build(),
+      home: Scaffold(
+        body: ListView(children: <Widget>[MaterialCard(estimate: estimate)]),
+      ),
+    );
 
     await tester.pumpWidget(
       build(const RoomEstimate(floorArea: 20, perimeter: 18, height: 2.8)),
@@ -168,8 +170,11 @@ void main() {
       build(const RoomEstimate(floorArea: 20, perimeter: 18)),
     );
     await tester.pumpAndSettle();
-    expect(find.text('0.00 m²'), findsNothing,
-        reason: 'eskirgan "Devorlar" tanlovi 0 ko‘rsatmasin');
+    expect(
+      find.text('0.00 m²'),
+      findsNothing,
+      reason: 'eskirgan "Devorlar" tanlovi 0 ko‘rsatmasin',
+    );
     expect(find.text('20.00 m²'), findsNWidgets(2));
   });
 

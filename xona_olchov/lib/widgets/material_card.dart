@@ -43,10 +43,10 @@ class _MaterialCardState extends State<MaterialCard> {
   /// Balandlik o'chirilsa devor variantlari yo'qoladi — tanlov ham
   /// avtomatik polga qaytadi, aks holda hisob 0 bo'lib qolardi.
   List<_Surface> get _available => <_Surface>[
-        _Surface.floor,
-        if (widget.estimate.hasHeight) _Surface.walls,
-        if (widget.estimate.hasHeight) _Surface.both,
-      ];
+    _Surface.floor,
+    if (widget.estimate.hasHeight) _Surface.walls,
+    if (widget.estimate.hasHeight) _Surface.both,
+  ];
 
   double _baseArea(_Surface surface) {
     final estimate = widget.estimate;
@@ -65,8 +65,9 @@ class _MaterialCardState extends State<MaterialCard> {
     final base = _baseArea(surface);
     final needed = estimate.withReserve(base);
     final perUnit = Fmt.parseNumber(_perUnit.text);
-    final units =
-        perUnit == null ? 0 : RoomEstimate.unitsNeeded(needed, perUnit);
+    final units = perUnit == null
+        ? 0
+        : RoomEstimate.unitsNeeded(needed, perUnit);
     final cost = RoomEstimate.totalCost(needed, Fmt.parseNumber(_price.text));
 
     return SectionCard(
@@ -131,7 +132,8 @@ class _MaterialCardState extends State<MaterialCard> {
           if (!estimate.hasHeight) ...<Widget>[
             const SizedBox(height: 12),
             const NoteBanner(
-              text: 'Devorlar yuzasi va hajmini ko‘rish uchun tahrirlashda '
+              text:
+                  'Devorlar yuzasi va hajmini ko‘rish uchun tahrirlashda '
                   'xona balandligini kiriting.',
               icon: Icons.height,
             ),
@@ -141,10 +143,7 @@ class _MaterialCardState extends State<MaterialCard> {
             SegmentedButton<_Surface>(
               segments: <ButtonSegment<_Surface>>[
                 for (final item in surfaces)
-                  ButtonSegment<_Surface>(
-                    value: item,
-                    label: Text(item.title),
-                  ),
+                  ButtonSegment<_Surface>(value: item, label: Text(item.title)),
               ],
               selected: <_Surface>{surface},
               showSelectedIcon: false,
